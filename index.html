@@ -6,32 +6,57 @@
     <title>Blocky Markdown Editor</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <div class="container">
+<body data-theme="minimal">
+    <div class="app-layout">
+        <!-- Header -->
         <header class="header">
-            <h1 class="logo">✨ Blocky Markdown ✨</h1>
+            <h1 class="logo">Blocky Markdown</h1>
             <div class="toolbar">
-                <button id="importBtn" class="btn btn-primary">📥 Import MD</button>
-                <button id="exportBtn" class="btn btn-primary">📤 Export MD</button>
-                <button id="clearBtn" class="btn btn-danger">🗑️ Clear All</button>
+                <button id="themeToggle" class="btn btn-secondary">🎨 Theme</button>
+                <button id="importBtn" class="btn btn-primary">📥 Import</button>
+                <button id="exportBtn" class="btn btn-primary">📤 Export</button>
             </div>
         </header>
 
-        <main class="editor-container">
-            <div id="blocksContainer" class="blocks-container">
-                <!-- Blocks will be added here dynamically -->
-            </div>
-            
-            <div class="add-block-toolbar">
-                <button class="btn-add" data-type="paragraph">📝 Paragraph</button>
-                <button class="btn-add" data-type="heading">📌 Heading</button>
-                <button class="btn-add" data-type="list">📋 List</button>
-                <button class="btn-add" data-type="code">💻 Code</button>
-                <button class="btn-add" data-type="table">📊 Table</button>
-                <button class="btn-add" data-type="link">🔗 Link</button>
-                <button class="btn-add" data-type="quote">💬 Quote</button>
-            </div>
-        </main>
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Outline Sidebar -->
+            <aside class="outline-sidebar">
+                <h3>Outline</h3>
+                <div id="outlineContent" class="outline-content">
+                    <!-- Outline will be generated here -->
+                </div>
+            </aside>
+
+            <!-- Editor Area -->
+            <main class="editor-area">
+                <div class="workspace-label">Workspace</div>
+                <div id="blocksContainer" class="blocks-container" data-drop-zone="workspace">
+                    <!-- Blocks will be added here dynamically -->
+                </div>
+                
+                <div class="add-block-toolbar">
+                    <button class="btn-add" data-type="frontmatter">⚙️ Frontmatter</button>
+                    <button class="btn-add" data-type="paragraph">📝 Paragraph</button>
+                    <button class="btn-add" data-type="heading">📌 Heading</button>
+                    <button class="btn-add" data-type="list">📋 List</button>
+                    <button class="btn-add" data-type="code">💻 Code</button>
+                    <button class="btn-add" data-type="table">📊 Table</button>
+                    <button class="btn-add" data-type="quote">💬 Quote</button>
+                    <button class="btn-add" data-type="hr">➖ HR</button>
+                    <button class="btn-add" data-type="br">⏎ BR</button>
+                    <button class="btn-add" data-type="html">🌐 HTML</button>
+                    <button class="btn-add" data-type="mermaid">📊 Mermaid</button>
+                </div>
+
+                <div class="cache-area">
+                    <div class="cache-label">Cache Area</div>
+                    <div id="cacheContainer" class="cache-container" data-drop-zone="cache">
+                        <!-- Cached blocks will be shown here -->
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 
     <!-- Modal for Import -->
@@ -62,58 +87,45 @@
                 <textarea id="exportTextarea" readonly></textarea>
             </div>
             <div class="modal-footer">
-                <button id="copyBtn" class="btn btn-primary">📋 Copy to Clipboard</button>
+                <button id="copyBtn" class="btn btn-primary">📋 Copy</button>
                 <button id="downloadBtn" class="btn btn-primary">💾 Download</button>
                 <button class="btn btn-secondary modal-close">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal for Table Editor -->
+    <!-- Modal for Enhanced Table Editor -->
     <div id="tableModal" class="modal">
-        <div class="modal-content modal-large">
+        <div class="modal-content modal-xlarge">
             <div class="modal-header">
                 <h2>Table Editor</h2>
                 <button class="modal-close">&times;</button>
             </div>
-            <div class="modal-body">
-                <div class="table-controls">
-                    <label>Rows: <input type="number" id="tableRows" value="3" min="1" max="20"></label>
-                    <label>Columns: <input type="number" id="tableCols" value="3" min="1" max="10"></label>
-                    <button id="generateTable" class="btn btn-small">Generate</button>
+            <div class="modal-body table-editor-body">
+                <div class="table-editor-layout">
+                    <!-- Left: Table Grid -->
+                    <div class="table-grid-section">
+                        <div class="table-controls">
+                            <button id="addRowBtn" class="btn btn-small">+ Row</button>
+                            <button id="removeRowBtn" class="btn btn-small">- Row</button>
+                            <button id="addColBtn" class="btn btn-small">+ Col</button>
+                            <button id="removeColBtn" class="btn btn-small">- Col</button>
+                        </div>
+                        <div id="tableEditor" class="table-editor"></div>
+                    </div>
+                    
+                    <!-- Right: Cell Content Editor -->
+                    <div class="cell-editor-section">
+                        <h3>Cell Editor</h3>
+                        <div class="selected-cell-info">
+                            <span id="selectedCellLabel">Select a cell to edit</span>
+                        </div>
+                        <textarea id="cellContentEditor" placeholder="Select a cell to edit its content..."></textarea>
+                    </div>
                 </div>
-                <div id="tableEditor" class="table-editor"></div>
             </div>
             <div class="modal-footer">
                 <button id="tableConfirm" class="btn btn-primary">Confirm</button>
-                <button class="btn btn-secondary modal-close">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Link Editor -->
-    <div id="linkModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Link Editor</h2>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="linkText">Link Text:</label>
-                    <input type="text" id="linkText" placeholder="Enter link text">
-                </div>
-                <div class="form-group">
-                    <label for="linkUrl">URL:</label>
-                    <input type="text" id="linkUrl" placeholder="https://example.com">
-                </div>
-                <div class="form-group">
-                    <label for="linkTitle">Title (optional):</label>
-                    <input type="text" id="linkTitle" placeholder="Link title">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="linkConfirm" class="btn btn-primary">Confirm</button>
                 <button class="btn btn-secondary modal-close">Cancel</button>
             </div>
         </div>
