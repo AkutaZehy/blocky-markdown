@@ -6,6 +6,7 @@
     --secondary-color: #333333;
     --accent-color: #666666;
     --bg-color: #FFFFFF;
+    --bg-secondary: #F5F5F5;
     --surface-color: #F5F5F5;
     --text-color: #000000;
     --border-color: #CCCCCC;
@@ -21,6 +22,7 @@
     --secondary-color: #B0B0B0;
     --accent-color: #808080;
     --bg-color: #1A1A1A;
+    --bg-secondary: #2A2A2A;
     --surface-color: #2A2A2A;
     --text-color: #E0E0E0;
     --border-color: #404040;
@@ -733,3 +735,127 @@ body {
     background: var(--hover-color);
     border-color: var(--primary-color);
 }
+
+/* Sticky toolbar for adding blocks */
+.add-block-toolbar-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+}
+
+.workspace-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Edit/Preview mode styles */
+.block[data-editing="true"] {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.block[data-editing="false"] {
+    cursor: grab;
+}
+
+.block[data-editing="false"]:active {
+    cursor: grabbing;
+}
+
+.block-preview {
+    cursor: pointer;
+}
+
+.block-preview:hover {
+    background: var(--hover-color);
+}
+
+.block-edit textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+.block-edit input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family-body);
+    margin-bottom: 8px;
+}
+
+.block-edit select {
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family-body);
+}
+
+.block-done-btn {
+    margin-top: 10px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--primary-color);
+    color: var(--bg-color);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.block-done-btn:hover {
+    opacity: 0.8;
+}
+
+.block-link-btn {
+    margin-top: 8px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--surface-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.block-link-btn:hover {
+    background: var(--hover-color);
+}
+
+/* Outline collapse toggle */
+.outline-item-toggle {
+    display: inline-block;
+    width: 20px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.8rem;
+}
+
+.outline-item-toggle:hover {
+    opacity: 0.7;
+}
+
+/* Secondary background color */
+.bg-secondary {
+    background: var(--surface-color);
+}
+

@@ -37,8 +37,8 @@
 
             <!-- Editor Area (Workspace) -->
             <main class="editor-area" id="editorArea">
-                <!-- Add block toolbar at top -->
-                <div class="add-block-toolbar-top">
+                <!-- Add block toolbar at top (sticky) -->
+                <div class="add-block-toolbar-sticky">
                     <button class="btn-add" data-type="frontmatter" title="Frontmatter"><span class="tag">[frontmatter]</span></button>
                     <button class="btn-add" data-type="paragraph" title="Paragraph"><span class="tag">[p]</span></button>
                     <button class="btn-add" data-type="heading" title="Heading"><span class="tag">[h]</span></button>
@@ -52,9 +52,11 @@
                     <button class="btn-add" data-type="mermaid" title="Mermaid"><span class="tag">[mermaid]</span></button>
                 </div>
 
-                <div class="workspace-label">Workspace</div>
-                <div id="blocksContainer" class="blocks-container" data-drop-zone="workspace">
-                    <!-- Blocks will be added here dynamically -->
+                <div class="workspace-content">
+                    <div class="workspace-label">Workspace</div>
+                    <div id="blocksContainer" class="blocks-container" data-drop-zone="workspace">
+                        <!-- Blocks will be added here dynamically -->
+                    </div>
                 </div>
             </main>
             <div class="resizer" id="cacheResizer"></div>
@@ -175,6 +177,20 @@
     
     <!-- Fallback markdown parser -->
     <script src="markdown-parser.js"></script>
+    
+    <!-- Utility modules -->
+    <script src="js/utils/storage.js"></script>
+    <script src="js/utils/markdown.js"></script>
+    <script src="js/utils/renderer.js"></script>
+    
+    <!-- UI modules -->
+    <script src="js/ui/outline.js"></script>
+    <script src="js/ui/dragdrop.js"></script>
+    <script src="js/ui/linkeditor.js"></script>
+    <script src="js/ui/tableeditor.js"></script>
+    
+    <!-- Block modules -->
+    <script src="js/blocks/factory.js"></script>
     
     <!-- Main application script -->
     <script src="app.js"></script>
