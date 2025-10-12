@@ -22,13 +22,18 @@ A local, framework-free markdown editor with a block-based interface inspired by
 - 🔗 **Link** - Hyperlinks with text, URL, and optional title
 - 💬 **Quote** - Blockquotes
 
-## Usage
+## Quick Start
 
 1. **Open the Editor**
    - Simply open `index.html` in your web browser
    - No server or build process required
 
-2. **Adding Blocks**
+2. **Try the Example**
+   - Click "📥 Import MD" button
+   - Copy the content from `example.md` and paste it
+   - Explore the different block types and features
+
+3. **Adding Blocks**
    - Click on any block type button at the bottom of the editor
    - Each block can be edited, moved, or deleted independently
 
