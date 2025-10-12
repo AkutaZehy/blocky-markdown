@@ -1,70 +1,106 @@
 # blocky-markdown
 
-A local, framework-free markdown editor with a block-based interface inspired by WordPress, featuring a Y2K design aesthetic.
+A minimalist, framework-free markdown editor with a block-based interface inspired by WordPress.
 
 ## Features
 
-- 🎨 **Y2K Design Style** - Retro aesthetics with neon colors, gradients, and shadows
+- 🎨 **Dual Theme System** - Minimalist (default) or Frutiger Aero aesthetic
 - 📝 **Block-Based Editing** - WordPress-like block system for organizing content
-- 📊 **Enhanced Table Editor** - Interactive table creation and editing interface
-- 🔗 **Smart Link Editor** - Easy-to-use interface for creating markdown links
-- 💾 **Import/Export** - Read and export markdown files
+- 📊 **Enhanced Table Editor** - Split view with grid navigation and dedicated cell editor
+- 🔗 **Smart Content Management** - Outline sidebar and cache area for better organization
+- 💾 **Import/Export** - Read and export markdown files with frontmatter support
 - 🔄 **Auto-Save** - Automatic saving to browser localStorage
 - 🚀 **No Build Required** - Pure HTML, CSS, and JavaScript
 
+## Theme System
+
+### Minimalist Theme (Default)
+- Black and white color scheme
+- Monospace fonts for clean readability
+- No decorative elements
+- Distraction-free writing experience
+
+### Frutiger Aero Theme
+- Modern blue color palette
+- Soft gradients and shadows
+- Professional, polished interface
+
+Toggle between themes using the 🎨 Theme button in the header.
+
 ## Supported Block Types
 
+- ⚙️ **Frontmatter** - Jekyll/Hugo YAML front matter
 - 📝 **Paragraph** - Regular text content
 - 📌 **Heading** - H1-H6 headings with level selector
 - 📋 **List** - Ordered and unordered lists
-- 💻 **Code** - Code blocks with syntax highlighting
+- 💻 **Code** - Code blocks with language tags
 - 📊 **Table** - Interactive table editor with visual interface
-- 🔗 **Link** - Hyperlinks with text, URL, and optional title
 - 💬 **Quote** - Blockquotes
+- ➖ **HR** - Horizontal rule
+- ⏎ **BR** - Line break
+- 🌐 **HTML** - Raw HTML blocks
+- 📊 **Mermaid** - Mermaid diagram support
 
-## Quick Start
+## Enhanced Features
+
+### Outline Sidebar
+- Real-time document structure view
+- Click any item to jump to that block
+- Shows block type icons and preview text
+- Automatically updates as you edit
+
+### Cache Area
+- Drag blocks to cache for temporary storage
+- Safer than immediate deletion
+- Edit blocks in cache or workspace
+- Permanent delete only available in cache
+
+### Table Editor Improvements
+- **Split View**: Grid navigation (left) + content editor (right)
+- **Add/Remove Rows**: Dynamic row management without data loss
+- **Add/Remove Columns**: Adjust table width on the fly
+- **Cell Selection**: Click cells to edit long content comfortably
+- **Link Support**: Easily edit markdown links in table cells
+
+## Usage
 
 1. **Open the Editor**
-   - Simply open `index.html` in your web browser
+   - Open `index.html` in your web browser
    - No server or build process required
 
-2. **Try the Example**
-   - Click "📥 Import MD" button
-   - Copy the content from `example.md` and paste it
-   - Explore the different block types and features
+2. **Choose Your Theme**
+   - Click 🎨 Theme to switch between minimalist and Frutiger Aero styles
+   - Your preference is saved automatically
 
 3. **Adding Blocks**
-   - Click on any block type button at the bottom of the editor
-   - Each block can be edited, moved, or deleted independently
+   - Click block type buttons at the bottom of the workspace
+   - Use the outline sidebar to navigate your document
 
-3. **Editing Content**
-   - Type directly in paragraph, heading, list, quote, and code blocks
-   - Use the edit button (✏️) for tables and links to open specialized editors
+4. **Editing Content**
+   - Type directly in text blocks
+   - Use ✏️ button for tables to open the enhanced editor
+   - Drag blocks up/down or use ↑↓ buttons to reorder
 
-4. **Managing Blocks**
-   - Use ↑↓ buttons to reorder blocks
-   - Use 🗑️ button to delete blocks
-   - Blocks are automatically saved to localStorage
+5. **Managing Blocks**
+   - Drag blocks to cache area (📦 button)
+   - Drag back to workspace when needed
+   - Permanently delete from cache area only
 
-5. **Import/Export**
-   - Click "📥 Import MD" to paste existing markdown
-   - Click "📤 Export MD" to copy or download your markdown
-   - Use "📋 Copy to Clipboard" or "💾 Download" in the export modal
+6. **Import/Export**
+   - Click "📥 Import" to paste existing markdown
+   - Click "📤 Export" to copy or download your markdown
+   - Supports Jekyll frontmatter
 
-6. **Table Editor**
-   - Specify rows and columns
-   - Click "Generate" to create the table structure
-   - Fill in cells directly
-   - Click "Confirm" to add to your document
-
-7. **Link Editor**
-   - Enter link text, URL, and optional title
-   - Click "Confirm" to insert the formatted link
+7. **Table Editing**
+   - Click ✏️ on table blocks
+   - Use +/- Row/Col buttons to adjust size
+   - Select cells to edit long content in dedicated editor
+   - Click Confirm to save changes
 
 ## Technologies Used
 
 - **HTML5** - Structure
-- **CSS3** - Y2K styling with gradients, animations, and neon effects
+- **CSS3** - Dual theme system with CSS variables
 - **JavaScript (ES6+)** - Application logic
 - **Marked.js** - Markdown parsing and rendering
 
@@ -73,7 +109,15 @@ A local, framework-free markdown editor with a block-based interface inspired by
 Works in all modern browsers that support:
 - ES6 JavaScript
 - CSS Grid and Flexbox
+- CSS Custom Properties
 - LocalStorage API
+- Drag and Drop API
+
+## Design Philosophy
+
+**Minimalist First**: The default theme prioritizes clarity and focus, using only black, white, and grays with monospace fonts. Perfect for distraction-free writing.
+
+**Professional Alternative**: The Frutiger Aero theme provides a modern, polished look with subtle colors and gradients for users who prefer more visual richness.
 
 ## License
 
@@ -81,4 +125,4 @@ MIT License - See LICENSE file for details
 
 ## About
 
-Created as a local tool for markdown editing with an intuitive block-based interface, requiring no frameworks or complex setup. Just open and start writing!
+A local markdown editor designed for writers who want block-based editing without the complexity of modern frameworks. Just open and start writing!
