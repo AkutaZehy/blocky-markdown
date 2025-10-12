@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blocky Markdown Editor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">✨ Blocky Markdown ✨</h1>
+            <div class="toolbar">
+                <button id="importBtn" class="btn btn-primary">📥 Import MD</button>
+                <button id="exportBtn" class="btn btn-primary">📤 Export MD</button>
+                <button id="clearBtn" class="btn btn-danger">🗑️ Clear All</button>
+            </div>
+        </header>
+
+        <main class="editor-container">
+            <div id="blocksContainer" class="blocks-container">
+                <!-- Blocks will be added here dynamically -->
+            </div>
+            
+            <div class="add-block-toolbar">
+                <button class="btn-add" data-type="paragraph">📝 Paragraph</button>
+                <button class="btn-add" data-type="heading">📌 Heading</button>
+                <button class="btn-add" data-type="list">📋 List</button>
+                <button class="btn-add" data-type="code">💻 Code</button>
+                <button class="btn-add" data-type="table">📊 Table</button>
+                <button class="btn-add" data-type="link">🔗 Link</button>
+                <button class="btn-add" data-type="quote">💬 Quote</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Import -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Import Markdown</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="importTextarea" placeholder="Paste your markdown here..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="importConfirm" class="btn btn-primary">Import</button>
+                <button class="btn btn-secondary modal-close">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Export -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Export Markdown</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="exportTextarea" readonly></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="copyBtn" class="btn btn-primary">📋 Copy to Clipboard</button>
+                <button id="downloadBtn" class="btn btn-primary">💾 Download</button>
+                <button class="btn btn-secondary modal-close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Table Editor -->
+    <div id="tableModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Table Editor</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="table-controls">
+                    <label>Rows: <input type="number" id="tableRows" value="3" min="1" max="20"></label>
+                    <label>Columns: <input type="number" id="tableCols" value="3" min="1" max="10"></label>
+                    <button id="generateTable" class="btn btn-small">Generate</button>
+                </div>
+                <div id="tableEditor" class="table-editor"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="tableConfirm" class="btn btn-primary">Confirm</button>
+                <button class="btn btn-secondary modal-close">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Link Editor -->
+    <div id="linkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Link Editor</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="linkText">Link Text:</label>
+                    <input type="text" id="linkText" placeholder="Enter link text">
+                </div>
+                <div class="form-group">
+                    <label for="linkUrl">URL:</label>
+                    <input type="text" id="linkUrl" placeholder="https://example.com">
+                </div>
+                <div class="form-group">
+                    <label for="linkTitle">Title (optional):</label>
+                    <input type="text" id="linkTitle" placeholder="Link title">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="linkConfirm" class="btn btn-primary">Confirm</button>
+                <button class="btn btn-secondary modal-close">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- External libraries -->
+    <script src="https://unpkg.com/marked@11.1.1/marked.min.js"></script>
+    
+    <!-- Fallback markdown parser -->
+    <script src="markdown-parser.js"></script>
+    
+    <!-- Main application script -->
+    <script src="app.js"></script>
+</body>
+</html>
