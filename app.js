@@ -1,13 +1,16 @@
-// Blocky Markdown Editor - Redesigned Version
+// Blocky Markdown Editor - Complete Redesign with Advanced Features
 class BlockyMarkdown {
     constructor() {
         this.workspaceBlocks = [];
         this.cacheBlocks = [];
         this.currentBlockId = 0;
-        this.currentTheme = 'minimal';
+        this.currentTheme = 'daytime';
         this.currentEditingTableBlockId = null;
+        this.currentEditingBlockId = null; // For link insertion
         this.selectedTableCell = null;
         this.draggedBlock = null;
+        this.draggedOverBlock = null;
+        this.collapsedHeadings = new Set();
         
         this.init();
     }
@@ -16,6 +19,7 @@ class BlockyMarkdown {
         this.setupEventListeners();
         this.loadFromLocalStorage();
         this.loadTheme();
+        this.setupResizers();
         
         // If no blocks exist, add a welcome block
         if (this.workspaceBlocks.length === 0) {
@@ -32,7 +36,8 @@ class BlockyMarkdown {
         // Add block buttons
         document.querySelectorAll('.btn-add').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const type = e.target.dataset.type;
+                e.preventDefault();
+                const type = e.target.closest('button').dataset.type;
                 this.addBlock(type, '', 'workspace');
             });
         });
@@ -61,6 +66,10 @@ class BlockyMarkdown {
         document.getElementById('addColBtn').addEventListener('click', () => this.addTableColumn());
         document.getElementById('removeColBtn').addEventListener('click', () => this.removeTableColumn());
         document.getElementById('tableConfirm').addEventListener('click', () => this.confirmTable());
+        document.getElementById('insertLinkInCell').addEventListener('click', () => {
+            this.currentEditingBlockId = this.currentEditingTableBlockId;
+            this.showLinkModal('cell');
+        });
         
         // Cell content editor
         document.getElementById('cellContentEditor').addEventListener('input', (e) => {
@@ -71,6 +80,9 @@ class BlockyMarkdown {
                 }
             }
         });
+        
+        // Link editor
+        document.getElementById('linkConfirm').addEventListener('click', () => this.confirmLink());
         
         // Close modal on background click
         document.querySelectorAll('.modal').forEach(modal => {
@@ -85,43 +97,110 @@ class BlockyMarkdown {
         this.setupDragAndDrop();
     }
     
+    setupResizers() {
+        const outlineResizer = document.getElementById('outlineResizer');
+        const cacheResizer = document.getElementById('cacheResizer');
+        const outlineSidebar = document.getElementById('outlineSidebar');
+        const cacheSidebar = document.getElementById('cacheSidebar');
+        
+        this.setupResizer(outlineResizer, outlineSidebar, 'left');
+        this.setupResizer(cacheResizer, cacheSidebar, 'right');
+    }
+    
+    setupResizer(resizer, panel, side) {
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+        
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = panel.offsetWidth;
+            resizer.classList.add('resizing');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            const delta = side === 'left' ? e.clientX - startX : startX - e.clientX;
+            const newWidth = Math.max(150, Math.min(500, startWidth + delta));
+            panel.style.width = newWidth + 'px';
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizer.classList.remove('resizing');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    }
+    
     setupDragAndDrop() {
         const workspaceContainer = document.getElementById('blocksContainer');
         const cacheContainer = document.getElementById('cacheContainer');
         
+        // Container drop zones
         [workspaceContainer, cacheContainer].forEach(container => {
             container.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 container.classList.add('drag-over');
             });
             
-            container.addEventListener('dragleave', () => {
-                container.classList.remove('drag-over');
+            container.addEventListener('dragleave', (e) => {
+                if (e.target === container) {
+                    container.classList.remove('drag-over');
+                }
             });
             
             container.addEventListener('drop', (e) => {
                 e.preventDefault();
                 container.classList.remove('drag-over');
                 
-                if (this.draggedBlock) {
+                if (this.draggedBlock !== null) {
                     const targetZone = container.dataset.dropZone;
-                    this.moveBlockToZone(this.draggedBlock, targetZone);
+                    
+                    // If dropping in same zone with draggedOverBlock, insert at that position
+                    if (this.draggedOverBlock !== null) {
+                        this.moveBlockToPosition(this.draggedBlock, this.draggedOverBlock, targetZone);
+                    } else {
+                        // Otherwise append to end of target zone
+                        this.moveBlockToZone(this.draggedBlock, targetZone);
+                    }
+                    
+                    this.draggedBlock = null;
+                    this.draggedOverBlock = null;
                 }
             });
         });
     }
     
     toggleTheme() {
-        this.currentTheme = this.currentTheme === 'minimal' ? 'aero' : 'minimal';
+        this.currentTheme = this.currentTheme === 'daytime' ? 'nightcore' : 'daytime';
         document.body.dataset.theme = this.currentTheme;
         localStorage.setItem('blockyMarkdownTheme', this.currentTheme);
+        
+        // Update theme button icon
+        const themeBtn = document.getElementById('themeToggle');
+        const icon = themeBtn.querySelector('.icon');
+        icon.textContent = this.currentTheme === 'daytime' ? '☀' : '🌙';
     }
     
     loadTheme() {
         const savedTheme = localStorage.getItem('blockyMarkdownTheme');
-        if (savedTheme) {
+        if (savedTheme && (savedTheme === 'daytime' || savedTheme === 'nightcore')) {
             this.currentTheme = savedTheme;
             document.body.dataset.theme = this.currentTheme;
+            
+            // Update theme button icon
+            const themeBtn = document.getElementById('themeToggle');
+            const icon = themeBtn.querySelector('.icon');
+            icon.textContent = this.currentTheme === 'daytime' ? '☀' : '🌙';
         }
     }
     
@@ -175,7 +254,7 @@ class BlockyMarkdown {
             }
         }
         
-        if (block && sourceZone !== targetZone) {
+        if (block) {
             block.zone = targetZone;
             if (targetZone === 'workspace') {
                 this.workspaceBlocks.push(block);
@@ -187,6 +266,38 @@ class BlockyMarkdown {
             this.updateOutline();
             this.saveToLocalStorage();
         }
+    }
+    
+    moveBlockToPosition(draggedBlockId, targetBlockId, targetZone) {
+        // Find and remove dragged block
+        let block = null;
+        let index = this.workspaceBlocks.findIndex(b => b.id === draggedBlockId);
+        if (index !== -1) {
+            block = this.workspaceBlocks.splice(index, 1)[0];
+        } else {
+            index = this.cacheBlocks.findIndex(b => b.id === draggedBlockId);
+            if (index !== -1) {
+                block = this.cacheBlocks.splice(index, 1)[0];
+            }
+        }
+        
+        if (!block) return;
+        
+        block.zone = targetZone;
+        
+        // Find target position
+        const targetBlocks = targetZone === 'workspace' ? this.workspaceBlocks : this.cacheBlocks;
+        const targetIndex = targetBlocks.findIndex(b => b.id === targetBlockId);
+        
+        if (targetIndex !== -1) {
+            targetBlocks.splice(targetIndex, 0, block);
+        } else {
+            targetBlocks.push(block);
+        }
+        
+        this.renderBlocks();
+        this.updateOutline();
+        this.saveToLocalStorage();
     }
     
     deleteBlock(blockId) {
@@ -213,9 +324,8 @@ class BlockyMarkdown {
         const newIndex = direction === 'up' ? index - 1 : index + 1;
         if (newIndex < 0 || newIndex >= blocks.length) return;
         
-        const block = blocks[index];
-        blocks.splice(index, 1);
-        blocks.splice(newIndex, 0, block);
+        // Swap blocks
+        [blocks[index], blocks[newIndex]] = [blocks[newIndex], blocks[index]];
         
         this.renderBlocks();
         this.updateOutline();
@@ -251,10 +361,6 @@ class BlockyMarkdown {
             const blockElement = this.createBlockElement(block, index, 'cache');
             cacheContainer.appendChild(blockElement);
         });
-        
-        if (this.cacheBlocks.length === 0) {
-            cacheContainer.innerHTML = '<p style="color: var(--secondary-color); text-align: center; padding: 20px;">Drag blocks here to cache them</p>';
-        }
     }
     
     createBlockElement(block, index, zone) {
@@ -270,7 +376,31 @@ class BlockyMarkdown {
         
         div.addEventListener('dragend', () => {
             this.draggedBlock = null;
+            this.draggedOverBlock = null;
             div.classList.remove('dragging');
+            document.querySelectorAll('.block').forEach(b => b.classList.remove('drag-over'));
+        });
+        
+        div.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (this.draggedBlock !== block.id) {
+                this.draggedOverBlock = block.id;
+                div.classList.add('drag-over');
+            }
+        });
+        
+        div.addEventListener('dragleave', () => {
+            div.classList.remove('drag-over');
+        });
+        
+        div.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            div.classList.remove('drag-over');
+            
+            if (this.draggedBlock && this.draggedBlock !== block.id) {
+                this.moveBlockToPosition(this.draggedBlock, block.id, zone);
+            }
         });
         
         // Block header
@@ -289,6 +419,7 @@ class BlockyMarkdown {
                 const upBtn = document.createElement('button');
                 upBtn.className = 'block-btn';
                 upBtn.textContent = '↑';
+                upBtn.title = 'Move up';
                 upBtn.onclick = () => this.moveBlock(block.id, 'up');
                 controls.appendChild(upBtn);
             }
@@ -297,6 +428,7 @@ class BlockyMarkdown {
                 const downBtn = document.createElement('button');
                 downBtn.className = 'block-btn';
                 downBtn.textContent = '↓';
+                downBtn.title = 'Move down';
                 downBtn.onclick = () => this.moveBlock(block.id, 'down');
                 controls.appendChild(downBtn);
             }
@@ -305,14 +437,14 @@ class BlockyMarkdown {
         if (block.type === 'table') {
             const editBtn = document.createElement('button');
             editBtn.className = 'block-btn';
-            editBtn.textContent = '✏️';
+            editBtn.textContent = 'Edit';
             editBtn.onclick = () => this.editTable(block.id);
             controls.appendChild(editBtn);
         }
         
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'block-btn';
-        deleteBtn.textContent = zone === 'workspace' ? '📦' : '🗑️';
+        deleteBtn.textContent = zone === 'workspace' ? 'Cache' : 'Delete';
         deleteBtn.title = zone === 'workspace' ? 'Move to cache' : 'Delete permanently';
         deleteBtn.onclick = () => {
             if (zone === 'workspace') {
@@ -338,19 +470,31 @@ class BlockyMarkdown {
     }
     
     createBlockInput(block) {
+        const container = document.createElement('div');
+        
         switch (block.type) {
             case 'frontmatter':
-                const fmContainer = document.createElement('div');
                 const fmTextarea = this.createTextarea(block, '---\ntitle: My Post\ndate: 2024-01-01\n---');
                 fmTextarea.style.fontFamily = "'SF Mono', 'Monaco', 'Consolas', monospace";
-                fmContainer.appendChild(fmTextarea);
-                return fmContainer;
+                container.appendChild(fmTextarea);
+                return container;
                 
             case 'paragraph':
-                return this.createTextarea(block, 'Write your paragraph here...');
+                const pTextarea = this.createTextarea(block, 'Write your paragraph here...');
+                container.appendChild(pTextarea);
+                
+                // Add link insertion button
+                const linkBtn = document.createElement('button');
+                linkBtn.className = 'block-link-btn';
+                linkBtn.textContent = 'Insert Link';
+                linkBtn.onclick = () => {
+                    this.currentEditingBlockId = block.id;
+                    this.showLinkModal('block');
+                };
+                container.appendChild(linkBtn);
+                return container;
                 
             case 'heading':
-                const headingContainer = document.createElement('div');
                 const select = document.createElement('select');
                 select.style.marginBottom = '10px';
                 for (let i = 1; i <= 6; i++) {
@@ -366,29 +510,40 @@ class BlockyMarkdown {
                 }
                 
                 select.onchange = () => {
-                    const textarea = headingContainer.querySelector('textarea');
+                    const textarea = container.querySelector('textarea');
                     const text = textarea.value.replace(/^#{1,6}\s/, '');
                     textarea.value = '#'.repeat(select.value) + ' ' + text;
                     this.updateBlockContent(block.id, textarea.value);
                 };
                 
-                const textarea = this.createTextarea(block, 'Heading text...');
-                textarea.oninput = (e) => {
+                const hTextarea = this.createTextarea(block, 'Heading text...');
+                hTextarea.oninput = (e) => {
                     const level = select.value;
                     const text = e.target.value.replace(/^#{1,6}\s/, '');
                     e.target.value = '#'.repeat(level) + ' ' + text;
                     this.updateBlockContent(block.id, e.target.value);
                 };
                 
-                headingContainer.appendChild(select);
-                headingContainer.appendChild(textarea);
-                return headingContainer;
+                container.appendChild(select);
+                container.appendChild(hTextarea);
+                return container;
                 
             case 'list':
-                return this.createTextarea(block, '- Item 1\n- Item 2\n- Item 3');
+                const lTextarea = this.createTextarea(block, '- Item 1\n- Item 2\n- Item 3');
+                container.appendChild(lTextarea);
+                
+                // Add link insertion button
+                const listLinkBtn = document.createElement('button');
+                listLinkBtn.className = 'block-link-btn';
+                listLinkBtn.textContent = 'Insert Link';
+                listLinkBtn.onclick = () => {
+                    this.currentEditingBlockId = block.id;
+                    this.showLinkModal('block');
+                };
+                container.appendChild(listLinkBtn);
+                return container;
                 
             case 'code':
-                const codeContainer = document.createElement('div');
                 const langInput = document.createElement('input');
                 langInput.type = 'text';
                 langInput.placeholder = 'Language (e.g., javascript)';
@@ -400,7 +555,7 @@ class BlockyMarkdown {
                 }
                 
                 langInput.oninput = () => {
-                    const codeTextarea = codeContainer.querySelector('textarea');
+                    const codeTextarea = container.querySelector('textarea');
                     const code = codeTextarea.value.replace(/^```\w*\n/, '').replace(/\n```$/, '');
                     const lang = langInput.value;
                     codeTextarea.value = '```' + lang + '\n' + code + '\n```';
@@ -413,9 +568,9 @@ class BlockyMarkdown {
                     this.updateBlockContent(block.id, e.target.value);
                 };
                 
-                codeContainer.appendChild(langInput);
-                codeContainer.appendChild(codeTextarea);
-                return codeContainer;
+                container.appendChild(langInput);
+                container.appendChild(codeTextarea);
+                return container;
                 
             case 'table':
                 return this.createRenderView(block);
@@ -438,11 +593,10 @@ class BlockyMarkdown {
                 return this.createTextarea(block, '<div>\n  <!-- Your HTML here -->\n</div>');
                 
             case 'mermaid':
-                const mermaidContainer = document.createElement('div');
                 const mermaidTextarea = this.createTextarea(block, '```mermaid\ngraph TD;\n  A-->B;\n  A-->C;\n  B-->D;\n  C-->D;\n```');
                 mermaidTextarea.style.fontFamily = "'SF Mono', 'Monaco', 'Consolas', monospace";
-                mermaidContainer.appendChild(mermaidTextarea);
-                return mermaidContainer;
+                container.appendChild(mermaidTextarea);
+                return container;
                 
             default:
                 return this.createTextarea(block, 'Content...');
@@ -477,19 +631,160 @@ class BlockyMarkdown {
     
     getBlockTypeLabel(type) {
         const labels = {
-            'frontmatter': '⚙️ Frontmatter',
-            'paragraph': '📝 Paragraph',
-            'heading': '📌 Heading',
-            'list': '📋 List',
-            'code': '💻 Code',
-            'table': '📊 Table',
-            'quote': '💬 Quote',
-            'hr': '➖ HR',
-            'br': '⏎ BR',
-            'html': '🌐 HTML',
-            'mermaid': '📊 Mermaid'
+            'frontmatter': '[frontmatter]',
+            'paragraph': '[p]',
+            'heading': '[h]',
+            'list': '[list]',
+            'code': '[code]',
+            'table': '[table]',
+            'quote': '[quote]',
+            'hr': '[hr]',
+            'br': '[br]',
+            'html': '[html]',
+            'mermaid': '[mermaid]'
         };
-        return labels[type] || type;
+        return labels[type] || `[${type}]`;
+    }
+    
+    // Outline Management with Hierarchy
+    updateOutline() {
+        const outlineContent = document.getElementById('outlineContent');
+        outlineContent.innerHTML = '';
+        
+        let headingStack = []; // Track heading hierarchy
+        
+        this.workspaceBlocks.forEach((block, index) => {
+            if (block.type === 'heading') {
+                const match = block.content.match(/^(#{1,6})\s(.+)/);
+                if (match) {
+                    const level = match[1].length;
+                    const text = match[2];
+                    
+                    // Update heading stack
+                    while (headingStack.length > 0 && headingStack[headingStack.length - 1].level >= level) {
+                        headingStack.pop();
+                    }
+                    
+                    const item = this.createOutlineItem(block, level, text, index);
+                    
+                    if (headingStack.length > 0) {
+                        item.dataset.parent = headingStack[headingStack.length - 1].id;
+                    }
+                    
+                    outlineContent.appendChild(item);
+                    headingStack.push({ level, id: block.id, element: item });
+                }
+            } else {
+                // Non-heading blocks
+                const text = this.getBlockOutlineText(block);
+                const item = this.createOutlineItem(block, 0, text, index);
+                
+                // If under a heading, indent appropriately
+                if (headingStack.length > 0) {
+                    item.dataset.parent = headingStack[headingStack.length - 1].id;
+                    item.dataset.level = headingStack[headingStack.length - 1].level + 1;
+                }
+                
+                outlineContent.appendChild(item);
+            }
+        });
+    }
+    
+    createOutlineItem(block, level, text, index) {
+        const item = document.createElement('div');
+        item.className = 'outline-item';
+        item.dataset.blockId = block.id;
+        item.dataset.level = level;
+        
+        // Add toggle for headings
+        if (block.type === 'heading' && level > 0) {
+            const toggle = document.createElement('span');
+            toggle.className = 'outline-item-toggle';
+            toggle.classList.add(this.collapsedHeadings.has(block.id) ? 'collapsed' : 'expanded');
+            toggle.onclick = (e) => {
+                e.stopPropagation();
+                this.toggleOutlineCollapse(block.id);
+            };
+            item.appendChild(toggle);
+        }
+        
+        const tag = document.createElement('span');
+        tag.className = 'outline-item-tag';
+        tag.textContent = this.getBlockTypeLabel(block.type);
+        
+        const textSpan = document.createElement('span');
+        textSpan.className = 'outline-item-text';
+        textSpan.textContent = text;
+        
+        item.appendChild(tag);
+        item.appendChild(textSpan);
+        
+        item.onclick = () => {
+            const blockElement = document.querySelector(`[data-block-id="${block.id}"]`);
+            if (blockElement) {
+                blockElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                blockElement.style.boxShadow = '0 0 0 3px var(--primary-color)';
+                setTimeout(() => {
+                    blockElement.style.boxShadow = '';
+                }, 1000);
+            }
+        };
+        
+        return item;
+    }
+    
+    toggleOutlineCollapse(headingId) {
+        if (this.collapsedHeadings.has(headingId)) {
+            this.collapsedHeadings.delete(headingId);
+        } else {
+            this.collapsedHeadings.add(headingId);
+        }
+        this.updateOutline();
+    }
+    
+    getBlockOutlineText(block) {
+        if (!block.content) {
+            return `[Empty ${block.type}]`;
+        }
+        
+        switch (block.type) {
+            case 'heading':
+                const headingText = block.content.replace(/^#{1,6}\s/, '');
+                return headingText.substring(0, 40) || '[Empty heading]';
+            
+            case 'paragraph':
+                return block.content.substring(0, 40) + (block.content.length > 40 ? '...' : '');
+            
+            case 'code':
+                const match = block.content.match(/^```(\w+)?/);
+                return match && match[1] ? `Code (${match[1]})` : 'Code block';
+            
+            case 'table':
+                const lines = block.content.split('\n').filter(l => l.trim().startsWith('|'));
+                return `Table (${lines.length > 2 ? lines.length - 2 : 0} rows)`;
+            
+            case 'list':
+                const items = block.content.split('\n').filter(l => l.trim());
+                return `List (${items.length} items)`;
+            
+            case 'frontmatter':
+                return 'Frontmatter';
+            
+            case 'hr':
+                return 'Horizontal rule';
+            
+            case 'br':
+                return 'Line break';
+            
+            case 'html':
+                return 'HTML block';
+            
+            case 'mermaid':
+                return 'Mermaid diagram';
+            
+            default:
+                return block.type;
+        }
     }
     
     // Table Editor Methods
@@ -553,6 +848,11 @@ class BlockyMarkdown {
                 td.onclick = () => this.selectTableCell(td, input.value);
                 input.onclick = (e) => e.stopPropagation();
                 input.onfocus = () => this.selectTableCell(td, input.value);
+                input.oninput = (e) => {
+                    if (this.selectedTableCell === td) {
+                        document.getElementById('cellContentEditor').value = e.target.value;
+                    }
+                };
                 
                 td.appendChild(input);
                 tr.appendChild(td);
@@ -600,6 +900,11 @@ class BlockyMarkdown {
             td.onclick = () => this.selectTableCell(td, input.value);
             input.onclick = (e) => e.stopPropagation();
             input.onfocus = () => this.selectTableCell(td, input.value);
+            input.oninput = (e) => {
+                if (this.selectedTableCell === td) {
+                    document.getElementById('cellContentEditor').value = e.target.value;
+                }
+            };
             
             td.appendChild(input);
             tr.appendChild(td);
@@ -635,6 +940,11 @@ class BlockyMarkdown {
             td.onclick = () => this.selectTableCell(td, input.value);
             input.onclick = (e) => e.stopPropagation();
             input.onfocus = () => this.selectTableCell(td, input.value);
+            input.oninput = (e) => {
+                if (this.selectedTableCell === td) {
+                    document.getElementById('cellContentEditor').value = e.target.value;
+                }
+            };
             
             td.appendChild(input);
             row.appendChild(td);
@@ -702,102 +1012,74 @@ class BlockyMarkdown {
         this.selectedTableCell = null;
     }
     
-    // Outline Management
-    updateOutline() {
-        const outlineContent = document.getElementById('outlineContent');
-        outlineContent.innerHTML = '';
+    // Link Editor Methods
+    showLinkModal(context) {
+        document.getElementById('linkText').value = '';
+        document.getElementById('linkUrl').value = '';
+        document.getElementById('linkTitle').value = '';
+        document.getElementById('linkModal').classList.add('active');
+        document.getElementById('linkModal').dataset.context = context;
+    }
+    
+    confirmLink() {
+        const text = document.getElementById('linkText').value;
+        const url = document.getElementById('linkUrl').value;
+        const title = document.getElementById('linkTitle').value;
         
-        this.workspaceBlocks.forEach((block, index) => {
-            const item = document.createElement('div');
-            item.className = 'outline-item';
-            item.dataset.blockId = block.id;
+        if (!text || !url) {
+            alert('Please provide both link text and URL');
+            return;
+        }
+        
+        let linkMarkdown = `[${text}](${url}`;
+        if (title) {
+            linkMarkdown += ` "${title}"`;
+        }
+        linkMarkdown += ')';
+        
+        const context = document.getElementById('linkModal').dataset.context;
+        
+        if (context === 'cell') {
+            // Insert into cell editor
+            const cellEditor = document.getElementById('cellContentEditor');
+            const start = cellEditor.selectionStart;
+            const end = cellEditor.selectionEnd;
+            const value = cellEditor.value;
+            cellEditor.value = value.substring(0, start) + linkMarkdown + value.substring(end);
             
-            const icon = document.createElement('span');
-            icon.className = 'outline-item-icon';
-            icon.textContent = this.getBlockIcon(block.type);
-            
-            const text = document.createElement('span');
-            text.className = 'outline-item-text';
-            text.textContent = this.getBlockOutlineText(block);
-            
-            item.appendChild(icon);
-            item.appendChild(text);
-            
-            item.onclick = () => {
-                const blockElement = document.querySelector(`[data-block-id="${block.id}"]`);
-                if (blockElement) {
-                    blockElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    blockElement.style.boxShadow = '0 0 0 3px var(--primary-color)';
-                    setTimeout(() => {
-                        blockElement.style.boxShadow = '';
-                    }, 1000);
+            // Update the actual cell input
+            if (this.selectedTableCell) {
+                const input = this.selectedTableCell.querySelector('input');
+                if (input) {
+                    input.value = cellEditor.value;
                 }
-            };
+            }
+        } else if (context === 'block' && this.currentEditingBlockId !== null) {
+            // Insert into block textarea
+            const block = this.workspaceBlocks.find(b => b.id === this.currentEditingBlockId) ||
+                         this.cacheBlocks.find(b => b.id === this.currentEditingBlockId);
             
-            outlineContent.appendChild(item);
-        });
-    }
-    
-    getBlockIcon(type) {
-        const icons = {
-            'frontmatter': '⚙️',
-            'paragraph': '📝',
-            'heading': '📌',
-            'list': '📋',
-            'code': '💻',
-            'table': '📊',
-            'quote': '💬',
-            'hr': '➖',
-            'br': '⏎',
-            'html': '🌐',
-            'mermaid': '📊'
-        };
-        return icons[type] || '📄';
-    }
-    
-    getBlockOutlineText(block) {
-        if (!block.content) {
-            return `[Empty ${block.type}]`;
+            if (block) {
+                const blockElement = document.querySelector(`[data-block-id="${this.currentEditingBlockId}"]`);
+                const textarea = blockElement?.querySelector('textarea');
+                
+                if (textarea) {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const value = textarea.value;
+                    const newValue = value.substring(0, start) + linkMarkdown + value.substring(end);
+                    textarea.value = newValue;
+                    this.updateBlockContent(this.currentEditingBlockId, newValue);
+                    
+                    // Set cursor after inserted link
+                    textarea.setSelectionRange(start + linkMarkdown.length, start + linkMarkdown.length);
+                    textarea.focus();
+                }
+            }
         }
         
-        switch (block.type) {
-            case 'heading':
-                const headingText = block.content.replace(/^#{1,6}\s/, '');
-                return headingText.substring(0, 40) || '[Empty heading]';
-            
-            case 'paragraph':
-                return block.content.substring(0, 40) + (block.content.length > 40 ? '...' : '');
-            
-            case 'code':
-                const match = block.content.match(/^```(\w+)?/);
-                return match && match[1] ? `Code (${match[1]})` : 'Code block';
-            
-            case 'table':
-                const lines = block.content.split('\n').filter(l => l.trim().startsWith('|'));
-                return `Table (${lines.length > 2 ? lines.length - 2 : 0} rows)`;
-            
-            case 'list':
-                const items = block.content.split('\n').filter(l => l.trim());
-                return `List (${items.length} items)`;
-            
-            case 'frontmatter':
-                return 'Frontmatter';
-            
-            case 'hr':
-                return 'Horizontal rule';
-            
-            case 'br':
-                return 'Line break';
-            
-            case 'html':
-                return 'HTML block';
-            
-            case 'mermaid':
-                return 'Mermaid diagram';
-            
-            default:
-                return block.type;
-        }
+        document.getElementById('linkModal').classList.remove('active');
+        this.currentEditingBlockId = null;
     }
     
     // Import/Export
@@ -984,7 +1266,7 @@ class BlockyMarkdown {
         
         const btn = document.getElementById('copyBtn');
         const originalText = btn.textContent;
-        btn.textContent = '✅ Copied!';
+        btn.textContent = 'Copied!';
         setTimeout(() => {
             btn.textContent = originalText;
         }, 2000);
@@ -1009,6 +1291,7 @@ class BlockyMarkdown {
             localStorage.setItem('blockyMarkdownWorkspace', JSON.stringify(this.workspaceBlocks));
             localStorage.setItem('blockyMarkdownCache', JSON.stringify(this.cacheBlocks));
             localStorage.setItem('blockyMarkdownCurrentId', this.currentBlockId.toString());
+            localStorage.setItem('blockyMarkdownCollapsedHeadings', JSON.stringify(Array.from(this.collapsedHeadings)));
         } catch (e) {
             console.error('Failed to save to localStorage:', e);
         }
@@ -1019,6 +1302,7 @@ class BlockyMarkdown {
             const savedWorkspace = localStorage.getItem('blockyMarkdownWorkspace');
             const savedCache = localStorage.getItem('blockyMarkdownCache');
             const savedId = localStorage.getItem('blockyMarkdownCurrentId');
+            const savedCollapsed = localStorage.getItem('blockyMarkdownCollapsedHeadings');
             
             if (savedWorkspace) {
                 this.workspaceBlocks = JSON.parse(savedWorkspace);
@@ -1030,6 +1314,10 @@ class BlockyMarkdown {
             
             if (savedId) {
                 this.currentBlockId = parseInt(savedId);
+            }
+            
+            if (savedCollapsed) {
+                this.collapsedHeadings = new Set(JSON.parse(savedCollapsed));
             }
             
             this.renderBlocks();
