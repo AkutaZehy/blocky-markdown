@@ -157,13 +157,20 @@
 
 ## 已知缺陷（本地使用）
 
-基于当前功能与实现，作为本地工作软件（不考虑持久化和内容安全）存在的主要缺陷：
+基于当前功能与实现，作为本地工作软件时（不考虑持久化和内容安全）存在的主要缺陷：
 
-1. **无撤销/历史记录**：所有操作直接改写 `workspaceBlocks`/`cacheBlocks` 并立即保存；导入时会清空现有块并重置计数器（`app.js#importMarkdown`），误操作后无法恢复。
-2. **缺少 Markdown 渲染预览**：块预览在 `BlockRenderer.createPreviewElement` 仅截取原始文本，`marked` 库未用于实际渲染，无法确认列表、代码或 Mermaid 的最终呈现效果。
-3. **导入/导出保真度有限**：`MarkdownUtils.parseImport` 依赖行级规则，不支持 setext 标题、`~~~` 代码围栏、对齐表格/嵌套列表等复杂结构；`exportBlocks` 仅拼接 `content` 字段，复杂 Markdown 往返易变形，frontmatter 也仅识别文件开头。
-4. **触控/键盘可用性不足**：面板分隔与拖拽仅监听鼠标/HTML5 drag 事件（`setupResizer`、`DragDropManager`），触屏设备无法调整或重排；也未提供键盘操作替代。
-5. **块编辑丢失格式细节**：表格编辑器用单行 `<input>` 重建并统一 `---` 分隔（`tableeditor.confirm`），无法保留对齐或单元格多行内容；代码块语言解析只匹配 `\w+`（`BlockFactory` 中的 `^```(\\w+)?`），`c#`、`c++` 等语言会被截断。
+1. **无撤销/历史记录**
+   - 所有操作直接改写 `workspaceBlocks`/`cacheBlocks` 并立即保存。导入时会清空现有块并重置计数器（`app.js` 的 `importMarkdown` 方法），误操作后无法恢复。
+2. **缺少 Markdown 渲染预览**
+   - 块预览在 `BlockRenderer.createPreviewElement` 仅截取原始文本，`marked` 库未用于实际渲染，无法确认列表、代码或 Mermaid 的最终呈现效果。
+3. **导入/导出保真度有限**
+   - `js/utils/markdown.js` 中的 `MarkdownUtils.parseImport` 依赖行级规则，不支持 setext 标题、`~~~` 代码围栏、对齐表格/嵌套列表等复杂结构。
+   - 同文件的 `MarkdownUtils.exportBlocks` 仅拼接 `content` 字段，复杂 Markdown 往返易变形，frontmatter 也仅识别文件开头。
+4. **触控/键盘可用性不足**
+   - 面板分隔与拖拽仅监听鼠标/HTML5 drag 事件（`setupResizer`、`DragDropManager`），触屏设备无法调整或重排，也未提供键盘操作替代。
+5. **块编辑丢失格式细节**
+   - 表格编辑器用单行 `<input>` 重建并统一 `---` 分隔（`TableEditorManager.confirm`），无法保留对齐或单元格多行内容。
+   - 代码块语言解析只接受 `\w+` 形式的语言标签（`BlockFactory` 的正则不涵盖 `c#`、`c++` 等），这些语言会被截断。
 
 ## 许可证
 
