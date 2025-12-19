@@ -8,9 +8,61 @@
 </head>
 <body data-theme="daytime">
     <div class="app-layout">
-        <!-- Header -->
-        <header class="header">
-            <h1 class="logo">Blocky Markdown</h1>
+        <!-- Main Layout - 3 Column Resizable -->
+        <div class="main-layout">
+            <!-- Outline Sidebar -->
+            <aside class="outline-sidebar" id="outlineSidebar">
+                <h3>Outline</h3>
+                <div id="outlineContent" class="outline-content">
+                    <!-- Outline will be generated here -->
+                </div>
+            </aside>
+            <div class="resizer" id="outlineResizer"></div>
+
+            <!-- Editor Area (Workspace) -->
+            <main class="editor-area" id="editorArea">
+                <div class="workspace-label">Workspace</div>
+                <!-- Add block toolbar at top (sticky) -->
+                <div class="add-block-toolbar-sticky">
+                    <button id="addPosToggle" class="btn btn-secondary btn-small" title="Click to toggle">Add → End</button>
+                    <button id="previewToggle" class="btn btn-secondary btn-small" title="Toggle preview/edit">Preview</button>
+                    <button class="btn-add" data-type="frontmatter" title="Frontmatter"><span class="tag">[frontmatter]</span></button>
+                    <button class="btn-add" data-type="paragraph" title="Paragraph"><span class="tag">[p]</span></button>
+                    <button class="btn-add" data-type="heading" title="Heading"><span class="tag">[h]</span></button>
+                    <button class="btn-add" data-type="list" title="List"><span class="tag">[list]</span></button>
+                    <button class="btn-add" data-type="code" title="Code"><span class="tag">[code]</span></button>
+                    <button class="btn-add" data-type="table" title="Table"><span class="tag">[table]</span></button>
+                    <button class="btn-add" data-type="quote" title="Quote"><span class="tag">[quote]</span></button>
+                    <button class="btn-add" data-type="hr" title="Horizontal Rule"><span class="tag">[hr]</span></button>
+                    <button class="btn-add" data-type="br" title="Line Break"><span class="tag">[br]</span></button>
+                    <button class="btn-add" data-type="html" title="HTML"><span class="tag">[html]</span></button>
+                    <button class="btn-add" data-type="mermaid" title="Mermaid"><span class="tag">[mermaid]</span></button>
+                    <button id="clearWorkspaceBtn" class="btn btn-small btn-secondary">Clear Workspace</button>
+                </div>
+
+                <div class="workspace-content">
+                    <div id="blocksContainer" class="blocks-container" data-drop-zone="workspace">
+                        <!-- Blocks will be added here dynamically -->
+                    </div>
+                </div>
+            </main>
+            <div class="resizer" id="cacheResizer"></div>
+
+            <!-- Cache Area -->
+            <aside class="cache-sidebar" id="cacheSidebar">
+                <div class="cache-label">
+                    <span>Cache Area</span>
+                    <button id="clearCacheBtn" class="btn btn-small btn-secondary">Clear</button>
+                </div>
+                <div id="cacheContainer" class="cache-container" data-drop-zone="cache">
+                    <!-- Cached blocks will be shown here -->
+                </div>
+            </aside>
+        </div>
+
+        <!-- Header (now bottom tips bar) -->
+        <header class="header bottom-bar">
+            <div class="logo" id="tipsText">Blocky Markdown</div>
             <div class="toolbar">
                 <button id="undoBtn" class="btn btn-secondary" title="Undo (Ctrl+Z)">↺ Undo</button>
                 <button id="redoBtn" class="btn btn-secondary" title="Redo (Ctrl+Y)">↻ Redo</button>
