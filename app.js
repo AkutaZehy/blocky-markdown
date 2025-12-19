@@ -6,6 +6,7 @@ class BlockyMarkdown {
         this.currentBlockId = 0;
         this.currentTheme = 'daytime';
         this.collapsedHeadings = new Set();
+        this.addPosition = 'end';
         
         // Initialize managers
         this.outlineManager = new OutlineManager(this);
@@ -22,11 +23,14 @@ class BlockyMarkdown {
         this.loadFromLocalStorage();
         this.loadTheme();
         this.setupResizers();
+        this.rebuildLinkedList('workspace');
+        this.rebuildLinkedList('cache');
         
         // Initialize managers
         this.dragDropManager.setup();
         this.linkEditor.setup();
         this.tableEditor.setup();
+        this.updateAddPositionUI();
         
         // If no blocks exist, add a welcome block
         if (this.workspaceBlocks.length === 0) {
@@ -45,8 +49,19 @@ class BlockyMarkdown {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const type = e.target.closest('button').dataset.type;
-                this.addBlock(type, '', 'workspace');
+                const position = this.addPosition === 'start' ? 0 : -1;
+                this.addBlock(type, '', 'workspace', position);
             });
+        });
+        
+        // Add position toggles
+        document.getElementById('addPosStart').addEventListener('click', () => {
+            this.addPosition = 'start';
+            this.updateAddPositionUI();
+        });
+        document.getElementById('addPosEnd').addEventListener('click', () => {
+            this.addPosition = 'end';
+            this.updateAddPositionUI();
         });
         
         // Import/Export buttons
@@ -66,6 +81,14 @@ class BlockyMarkdown {
         // Export controls
         document.getElementById('copyBtn').addEventListener('click', () => this.copyToClipboard());
         document.getElementById('downloadBtn').addEventListener('click', () => this.downloadMarkdown());
+        
+        // Clear cache
+        document.getElementById('clearCacheBtn').addEventListener('click', () => {
+            this.cacheBlocks = [];
+            this.rebuildLinkedList('cache');
+            this.renderBlocks();
+            this.saveToLocalStorage();
+        });
         
         // Close modal on background click
         document.querySelectorAll('.modal').forEach(modal => {
@@ -92,6 +115,15 @@ class BlockyMarkdown {
         
         this.setupResizer(outlineResizer, outlineSidebar, 'left');
         this.setupResizer(cacheResizer, cacheSidebar, 'right');
+    }
+    
+    updateAddPositionUI() {
+        const startBtn = document.getElementById('addPosStart');
+        const endBtn = document.getElementById('addPosEnd');
+        if (startBtn && endBtn) {
+            startBtn.classList.toggle('active', this.addPosition === 'start');
+            endBtn.classList.toggle('active', this.addPosition === 'end');
+        }
     }
     
     setupResizer(resizer, panel, side) {
@@ -149,23 +181,113 @@ class BlockyMarkdown {
         }
     }
     
+    getList(zone) {
+        return zone === 'cache' ? this.cacheBlocks : this.workspaceBlocks;
+    }
+    
+    setList(zone, list) {
+        if (zone === 'cache') {
+            this.cacheBlocks = list;
+        } else {
+            this.workspaceBlocks = list;
+        }
+    }
+    
+    rebuildLinkedList(zone) {
+        const list = this.getList(zone);
+        list.sort((a, b) => (a.index || (list.indexOf(a) + 1)) - (b.index || (list.indexOf(b) + 1)));
+        let prevId = null;
+        list.forEach((block, idx) => {
+            block.index = idx + 1;
+            block.prevId = prevId;
+            block.nextId = null;
+            if (prevId !== null) {
+                const prevBlock = list[idx - 1];
+                prevBlock.nextId = block.id;
+            }
+            prevId = block.id;
+        });
+    }
+    
+    removeBlockById(blockId) {
+        let block = null;
+        let zone = 'workspace';
+        let list = this.workspaceBlocks;
+        let index = list.findIndex(b => b.id === blockId);
+        if (index !== -1) {
+            block = list.splice(index, 1)[0];
+        } else {
+            list = this.cacheBlocks;
+            index = list.findIndex(b => b.id === blockId);
+            if (index !== -1) {
+                block = list.splice(index, 1)[0];
+                zone = 'cache';
+            }
+        }
+        if (block) {
+            this.rebuildLinkedList(zone);
+        }
+        return { block, zone };
+    }
+    
+    insertBlockRelative(block, targetZone, targetBlockId, position) {
+        const list = this.getList(targetZone);
+        block.zone = targetZone;
+        // If block already exists in list, remove to reinsert
+        const existingIndex = list.findIndex(b => b.id === block.id);
+        if (existingIndex !== -1) {
+            list.splice(existingIndex, 1);
+        }
+        
+        let targetBlock = list.find(b => b.id === targetBlockId);
+        let tempIndex;
+        if (targetBlock) {
+            tempIndex = (targetBlock.index || list.indexOf(targetBlock) + 1) + (position === 'after' ? 0.5 : -0.5);
+        } else {
+            tempIndex = list.length + 1;
+        }
+        
+        block.index = tempIndex;
+        list.push(block);
+        list.sort((a, b) => (a.index) - (b.index));
+        this.rebuildLinkedList(targetZone);
+    }
+    
+    moveBlockToIndex(blockId, zone, targetIndex) {
+        const list = this.getList(zone);
+        const idx = list.findIndex(b => b.id === blockId);
+        if (idx === -1) return;
+        const block = list.splice(idx, 1)[0];
+        const clamped = Math.max(1, Math.min(targetIndex, list.length + 1));
+        list.splice(clamped - 1, 0, block);
+        this.rebuildLinkedList(zone);
+    }
+    
     addBlock(type, content = '', zone = 'workspace', position = -1) {
         const blockId = this.currentBlockId++;
         const block = {
             id: blockId,
             type: type,
             content: content,
-            zone: zone
+            zone: zone,
+            index: 0,
+            prevId: null,
+            nextId: null
         };
         
         if (zone === 'workspace') {
             if (position === -1) {
+                block.index = this.workspaceBlocks.length + 1;
                 this.workspaceBlocks.push(block);
             } else {
-                this.workspaceBlocks.splice(position, 0, block);
+                const insertAt = Math.max(0, Math.min(position, this.workspaceBlocks.length));
+                this.workspaceBlocks.splice(insertAt, 0, block);
             }
+            this.rebuildLinkedList('workspace');
         } else {
+            block.index = this.cacheBlocks.length + 1;
             this.cacheBlocks.push(block);
+            this.rebuildLinkedList('cache');
         }
         
         this.renderBlocks();
@@ -181,9 +303,8 @@ class BlockyMarkdown {
         const newIndex = direction === 'up' ? index - 1 : index + 1;
         if (newIndex < 0 || newIndex >= blocks.length) return;
         
-        // Swap blocks
         [blocks[index], blocks[newIndex]] = [blocks[newIndex], blocks[index]];
-        
+        this.rebuildLinkedList('workspace');
         this.renderBlocks();
         this.outlineManager.update();
         this.saveToLocalStorage();
@@ -200,11 +321,10 @@ class BlockyMarkdown {
     permanentlyDeleteBlock(blockId) {
         let index = this.cacheBlocks.findIndex(b => b.id === blockId);
         if (index !== -1) {
-            if (confirm('Permanently delete this block? This cannot be undone.')) {
-                this.cacheBlocks.splice(index, 1);
-                this.renderBlocks();
-                this.saveToLocalStorage();
-            }
+            this.cacheBlocks.splice(index, 1);
+            this.rebuildLinkedList('cache');
+            this.renderBlocks();
+            this.saveToLocalStorage();
         }
     }
     
@@ -222,6 +342,8 @@ class BlockyMarkdown {
     }
     
     renderBlocks() {
+        this.rebuildLinkedList('workspace');
+        this.rebuildLinkedList('cache');
         const workspaceContainer = document.getElementById('blocksContainer');
         const cacheContainer = document.getElementById('cacheContainer');
         
@@ -241,6 +363,7 @@ class BlockyMarkdown {
     
     closeAllEditModes() {
         document.querySelectorAll('.block[data-editing="true"]').forEach(blockElement => {
+            if (blockElement.dataset.editMode === 'focus') return;
             const blockId = parseInt(blockElement.dataset.blockId);
             this.blockFactory.toggleEditMode(blockId);
         });
@@ -281,6 +404,7 @@ class BlockyMarkdown {
             this.addBlock(blockData.type, blockData.content, 'workspace');
         });
         
+        this.rebuildLinkedList('workspace');
         this.renderBlocks();
         this.outlineManager.update();
         this.saveToLocalStorage();
@@ -329,10 +453,12 @@ class BlockyMarkdown {
         
         if (savedWorkspace) {
             this.workspaceBlocks = savedWorkspace;
+            this.rebuildLinkedList('workspace');
         }
         
         if (savedCache) {
             this.cacheBlocks = savedCache;
+            this.rebuildLinkedList('cache');
         }
         
         if (savedId) {

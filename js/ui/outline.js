@@ -42,7 +42,7 @@ class OutlineManager {
                 }
             } else {
                 // Non-heading blocks
-                const text = BlockRenderer.getBlockOutlineText(block);
+                const text = '';
                 
                 // Check if under a collapsed heading
                 let isVisible = true;
@@ -68,6 +68,7 @@ class OutlineManager {
         item.className = 'outline-item';
         item.dataset.blockId = block.id;
         item.style.paddingLeft = (level * 20) + 'px';
+        item.dataset.level = level;
         
         // Add toggle for headings
         if (isHeading) {
@@ -95,8 +96,16 @@ class OutlineManager {
         textSpan.className = 'outline-item-text';
         textSpan.textContent = text;
         
+        const indexSpan = document.createElement('span');
+        indexSpan.className = 'outline-item-index';
+        const blockIndex = block.index || (index + 1);
+        indexSpan.textContent = `#${blockIndex}`;
+        
+        item.appendChild(indexSpan);
         item.appendChild(tag);
-        item.appendChild(textSpan);
+        if (isHeading) {
+            item.appendChild(textSpan);
+        }
         
         item.onclick = () => {
             const blockElement = document.querySelector(`.blocks-container [data-block-id="${block.id}"], .cache-container [data-block-id="${block.id}"]`);

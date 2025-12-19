@@ -5,6 +5,7 @@ class DragDropManager {
         this.draggedBlock = null;
         this.draggedOverBlock = null;
         this.draggedOverZone = null;
+        this.draggedOverPosition = 'before';
     }
     
     setup() {
@@ -61,94 +62,56 @@ class DragDropManager {
             this.draggedOverBlock = null;
             this.draggedOverZone = null;
             blockElement.classList.remove('dragging');
-            document.querySelectorAll('.block').forEach(b => b.classList.remove('drag-over'));
+            document.querySelectorAll('.block').forEach(b => b.classList.remove('drag-over', 'drag-over-after', 'drag-over-before'));
         });
         
         blockElement.addEventListener('dragover', (e) => {
             e.preventDefault();
             if (this.draggedBlock !== blockId) {
                 this.draggedOverBlock = blockId;
+                const rect = blockElement.getBoundingClientRect();
+                this.draggedOverPosition = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
                 blockElement.classList.add('drag-over');
+                blockElement.classList.toggle('drag-over-after', this.draggedOverPosition === 'after');
+                blockElement.classList.toggle('drag-over-before', this.draggedOverPosition === 'before');
             }
         });
         
         blockElement.addEventListener('dragleave', () => {
-            blockElement.classList.remove('drag-over');
+            blockElement.classList.remove('drag-over', 'drag-over-after', 'drag-over-before');
         });
         
         blockElement.addEventListener('drop', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            blockElement.classList.remove('drag-over');
+            blockElement.classList.remove('drag-over', 'drag-over-after', 'drag-over-before');
             
             if (this.draggedBlock && this.draggedBlock !== blockId) {
                 // Get the zone from the container
                 const zone = blockElement.closest('[data-drop-zone]').dataset.dropZone;
-                this.moveBlockToPosition(this.draggedBlock, blockId, zone);
+                this.moveBlockToPosition(this.draggedBlock, blockId, zone, this.draggedOverPosition);
             }
         });
     }
     
     moveBlockToZone(blockId, targetZone) {
-        let block = null;
-        
-        // Find and remove the block
-        let index = this.app.workspaceBlocks.findIndex(b => b.id === blockId);
-        if (index !== -1) {
-            block = this.app.workspaceBlocks.splice(index, 1)[0];
-        } else {
-            index = this.app.cacheBlocks.findIndex(b => b.id === blockId);
-            if (index !== -1) {
-                block = this.app.cacheBlocks.splice(index, 1)[0];
-            }
-        }
-        
-        if (block) {
-            block.zone = targetZone;
-            if (targetZone === 'workspace') {
-                this.app.workspaceBlocks.push(block);
-            } else {
-                this.app.cacheBlocks.push(block);
-            }
-            
-            this.app.renderBlocks();
-            this.app.outlineManager.update();
-            this.app.saveToLocalStorage();
-        }
+        const { block } = this.app.removeBlockById(blockId);
+        if (!block) return;
+        block.zone = targetZone;
+        this.app.insertBlockRelative(block, targetZone, null, 'after');
+        this.app.renderBlocks();
+        this.app.outlineManager.update();
+        this.app.saveToLocalStorage();
     }
     
-    moveBlockToPosition(draggedBlockId, targetBlockId, targetZone) {
-        // Find and remove dragged block
-        let block = null;
-        let index = this.app.workspaceBlocks.findIndex(b => b.id === draggedBlockId);
-        if (index !== -1) {
-            block = this.app.workspaceBlocks.splice(index, 1)[0];
-        } else {
-            index = this.app.cacheBlocks.findIndex(b => b.id === draggedBlockId);
-            if (index !== -1) {
-                block = this.app.cacheBlocks.splice(index, 1)[0];
-            }
-        }
-        
+    moveBlockToPosition(draggedBlockId, targetBlockId, targetZone, position) {
+        const { block } = this.app.removeBlockById(draggedBlockId);
         if (!block) {
             console.error('Block not found:', draggedBlockId);
             return;
         }
-        
         block.zone = targetZone;
-        
-        // Find target position
-        const targetBlocks = targetZone === 'workspace' ? this.app.workspaceBlocks : this.app.cacheBlocks;
-        const targetIndex = targetBlocks.findIndex(b => b.id === targetBlockId);
-        
-        if (targetIndex !== -1) {
-            // Insert before the target block
-            targetBlocks.splice(targetIndex, 0, block);
-        } else {
-            // If target not found, append to end
-            targetBlocks.push(block);
-        }
-        
+        this.app.insertBlockRelative(block, targetZone, targetBlockId, position || 'before');
         this.app.renderBlocks();
         this.app.outlineManager.update();
         this.app.saveToLocalStorage();

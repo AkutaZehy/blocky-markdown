@@ -9,6 +9,7 @@ class BlockFactory {
         div.className = 'block';
         div.dataset.blockId = block.id;
         div.dataset.editing = 'false';
+        div.dataset.editMode = '';
         
         // Block header
         const header = this.createBlockHeader(block, index, zone);
@@ -17,6 +18,14 @@ class BlockFactory {
         // Block content (preview by default)
         const content = document.createElement('div');
         content.className = 'block-content';
+        content.addEventListener('click', (e) => {
+            if (block.type === 'hr' || block.type === 'br') return;
+            if (div.dataset.editMode === 'focus') return;
+            if (div.dataset.editing === 'false') {
+                this.toggleEditMode(block.id, 'inline');
+            }
+            e.stopPropagation();
+        });
         
         if (block.type === 'hr' || block.type === 'br') {
             // These blocks don't need edit mode
@@ -38,9 +47,18 @@ class BlockFactory {
         const header = document.createElement('div');
         header.className = 'block-header';
         
+        const meta = document.createElement('div');
+        meta.className = 'block-meta';
+        
+        const indexLabel = document.createElement('span');
+        indexLabel.className = 'block-index';
+        indexLabel.textContent = `#${block.index || index + 1}`;
+        meta.appendChild(indexLabel);
+        
         const typeLabel = document.createElement('span');
         typeLabel.className = 'block-type';
         typeLabel.textContent = BlockRenderer.getBlockTypeLabel(block.type);
+        meta.appendChild(typeLabel);
         
         const controls = document.createElement('div');
         controls.className = 'block-controls';
@@ -55,13 +73,26 @@ class BlockFactory {
                 if (block.type === 'table') {
                     this.app.tableEditor.edit(block.id);
                 } else {
-                    this.toggleEditMode(block.id);
+                    this.toggleEditMode(block.id, 'focus');
                 }
             };
             controls.appendChild(editBtn);
         }
         
         if (zone === 'workspace') {
+            const toTopBtn = document.createElement('button');
+            toTopBtn.className = 'block-btn';
+            toTopBtn.textContent = '⇤';
+            toTopBtn.title = 'Move to top';
+            toTopBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.app.moveBlockToIndex(block.id, 'workspace', 1);
+                this.app.renderBlocks();
+                this.app.outlineManager.update();
+                this.app.saveToLocalStorage();
+            };
+            controls.appendChild(toTopBtn);
+            
             if (index > 0) {
                 const upBtn = document.createElement('button');
                 upBtn.className = 'block-btn';
@@ -80,13 +111,51 @@ class BlockFactory {
                 controls.appendChild(downBtn);
             }
             
+            const toBottomBtn = document.createElement('button');
+            toBottomBtn.className = 'block-btn';
+            toBottomBtn.textContent = '⇥';
+            toBottomBtn.title = 'Move to bottom';
+            toBottomBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.app.moveBlockToIndex(block.id, 'workspace', this.app.workspaceBlocks.length);
+                this.app.renderBlocks();
+                this.app.outlineManager.update();
+                this.app.saveToLocalStorage();
+            };
+            controls.appendChild(toBottomBtn);
+            
             const cacheBtn = document.createElement('button');
             cacheBtn.className = 'block-btn';
             cacheBtn.textContent = 'Cache';
             cacheBtn.onclick = () => this.app.moveBlockToCache(block.id);
             controls.appendChild(cacheBtn);
+            
+            const indexInput = document.createElement('input');
+            indexInput.type = 'number';
+            indexInput.className = 'block-index-input';
+            indexInput.title = 'Set index (integer)';
+            indexInput.value = block.index || index + 1;
+            indexInput.onchange = (e) => {
+                const value = parseInt(e.target.value, 10);
+                if (!isNaN(value)) {
+                    this.app.moveBlockToIndex(block.id, 'workspace', value);
+                    this.app.renderBlocks();
+                    this.app.outlineManager.update();
+                    this.app.saveToLocalStorage();
+                }
+            };
+            controls.appendChild(indexInput);
         } else {
             // Cache zone
+            const restoreEndBtn = document.createElement('button');
+            restoreEndBtn.className = 'block-btn';
+            restoreEndBtn.textContent = 'To WS';
+            restoreEndBtn.title = 'Move to workspace end';
+            restoreEndBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.app.dragDropManager.moveBlockToZone(block.id, 'workspace');
+            };
+            controls.appendChild(restoreEndBtn);
             const restoreBtn = document.createElement('button');
             restoreBtn.className = 'block-btn';
             restoreBtn.textContent = 'Restore';
@@ -100,7 +169,7 @@ class BlockFactory {
             controls.appendChild(deleteBtn);
         }
         
-        header.appendChild(typeLabel);
+        header.appendChild(meta);
         header.appendChild(controls);
         
         return header;
@@ -257,11 +326,15 @@ class BlockFactory {
         const btn = document.createElement('button');
         btn.className = 'block-done-btn';
         btn.textContent = 'Done';
-        btn.onclick = () => this.toggleEditMode(blockId);
+        btn.onclick = () => {
+            const el = document.querySelector(`.blocks-container [data-block-id="${blockId}"], .cache-container [data-block-id="${blockId}"]`);
+            const mode = el?.dataset.editMode || 'inline';
+            this.toggleEditMode(blockId, mode);
+        };
         return btn;
     }
     
-    toggleEditMode(blockId) {
+    toggleEditMode(blockId, mode = 'inline') {
         const blockElement = document.querySelector(`.blocks-container [data-block-id="${blockId}"], .cache-container [data-block-id="${blockId}"]`);
         if (!blockElement) {
             console.error('Block element not found:', blockId);
@@ -288,11 +361,13 @@ class BlockFactory {
         if (isEditing) {
             // Switch to preview
             blockElement.dataset.editing = 'false';
+            blockElement.dataset.editMode = '';
             blockElement.draggable = true;
             contentDiv.appendChild(this.createPreviewContent(block));
         } else {
             // Switch to edit
             blockElement.dataset.editing = 'true';
+            blockElement.dataset.editMode = mode;
             blockElement.draggable = false;
             contentDiv.appendChild(this.createEditContent(block));
             

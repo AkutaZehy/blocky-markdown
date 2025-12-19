@@ -39,6 +39,10 @@
             <main class="editor-area" id="editorArea">
                 <!-- Add block toolbar at top (sticky) -->
                 <div class="add-block-toolbar-sticky">
+                    <div class="add-pos-toggles">
+                        <button id="addPosStart" class="btn btn-secondary btn-small">Add → Start</button>
+                        <button id="addPosEnd" class="btn btn-secondary btn-small active">Add → End</button>
+                    </div>
                     <button class="btn-add" data-type="frontmatter" title="Frontmatter"><span class="tag">[frontmatter]</span></button>
                     <button class="btn-add" data-type="paragraph" title="Paragraph"><span class="tag">[p]</span></button>
                     <button class="btn-add" data-type="heading" title="Heading"><span class="tag">[h]</span></button>
@@ -63,7 +67,10 @@
 
             <!-- Cache Area -->
             <aside class="cache-sidebar" id="cacheSidebar">
-                <div class="cache-label">Cache Area</div>
+                <div class="cache-label">
+                    <span>Cache Area</span>
+                    <button id="clearCacheBtn" class="btn btn-small btn-secondary">Clear</button>
+                </div>
                 <div id="cacheContainer" class="cache-container" data-drop-zone="cache">
                     <!-- Cached blocks will be shown here -->
                 </div>

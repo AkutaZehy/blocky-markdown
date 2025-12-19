@@ -195,6 +195,13 @@ body {
     white-space: nowrap;
 }
 
+.outline-item-index {
+    font-weight: 700;
+    color: var(--primary-color);
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+
 /* Hierarchical outline indentation */
 .outline-item[data-level="1"] {
     padding-left: 8px;
@@ -336,6 +343,16 @@ body {
 }
 
 .block.drag-over {
+    border: 2px dashed var(--primary-color);
+}
+
+.block.drag-over-after {
+    border: 1px solid var(--border-color);
+    border-bottom: 3px solid var(--primary-color);
+}
+
+.block.drag-over-before {
+    border: 1px solid var(--border-color);
     border-top: 3px solid var(--primary-color);
 }
 
@@ -348,6 +365,18 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+.block-meta {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.block-index {
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-right: 8px;
+}
+
 .block-type {
     font-size: 0.85rem;
     color: var(--accent-color);
@@ -358,6 +387,8 @@ body {
 .block-controls {
     display: flex;
     gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .block-btn {
@@ -374,6 +405,15 @@ body {
 .block-btn:hover {
     background: var(--hover-color);
     border-color: var(--primary-color);
+}
+
+.block-index-input {
+    width: 70px;
+    padding: 4px 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-color);
 }
 
 .block-content {
@@ -405,9 +445,9 @@ body {
 
 /* Cache Sidebar */
 .cache-sidebar {
-    width: 250px;
-    min-width: 150px;
-    max-width: 500px;
+    width: 320px;
+    min-width: 200px;
+    max-width: 560px;
     background: var(--surface-color);
     border-left: 1px solid var(--border-color);
     padding: 16px;
@@ -421,6 +461,25 @@ body {
     color: var(--secondary-color);
     margin-bottom: 12px;
     font-family: var(--font-family);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.add-pos-toggles {
+    display: inline-flex;
+    gap: 8px;
+    margin-right: 12px;
+}
+
+.add-pos-toggles .btn-small {
+    padding: 6px 10px;
+}
+
+.add-pos-toggles .active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
 }
 
 .cache-container {
@@ -858,4 +917,3 @@ body {
 .bg-secondary {
     background: var(--surface-color);
 }
-
