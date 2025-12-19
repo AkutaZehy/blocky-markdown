@@ -50,17 +50,14 @@ class BlockyMarkdown {
                 e.preventDefault();
                 const type = e.target.closest('button').dataset.type;
                 const position = this.addPosition === 'start' ? 0 : -1;
+                console.debug('addBlock click', { type, addPosition: this.addPosition, insertPosition: position });
                 this.addBlock(type, '', 'workspace', position);
             });
         });
         
-        // Add position toggles
-        document.getElementById('addPosStart').addEventListener('click', () => {
-            this.addPosition = 'start';
-            this.updateAddPositionUI();
-        });
-        document.getElementById('addPosEnd').addEventListener('click', () => {
-            this.addPosition = 'end';
+        // Add position toggle
+        document.getElementById('addPosToggle').addEventListener('click', () => {
+            this.addPosition = this.addPosition === 'start' ? 'end' : 'start';
             this.updateAddPositionUI();
         });
         
@@ -127,11 +124,11 @@ class BlockyMarkdown {
     }
     
     updateAddPositionUI() {
-        const startBtn = document.getElementById('addPosStart');
-        const endBtn = document.getElementById('addPosEnd');
-        if (startBtn && endBtn) {
-            startBtn.classList.toggle('active', this.addPosition === 'start');
-            endBtn.classList.toggle('active', this.addPosition === 'end');
+        const toggleBtn = document.getElementById('addPosToggle');
+        if (toggleBtn) {
+            const isStart = this.addPosition === 'start';
+            toggleBtn.textContent = isStart ? 'Add → Start' : 'Add → End';
+            toggleBtn.title = 'Click to toggle';
         }
     }
     
@@ -264,14 +261,19 @@ class BlockyMarkdown {
     }
     
     moveBlockToIndex(blockId, zone, targetIndex) {
+        const { block } = this.removeBlockById(blockId);
+        if (!block) {
+            console.error('moveBlockToIndex: block not found', { blockId, zone, targetIndex });
+            return;
+        }
+        block.zone = zone;
         const list = this.getList(zone);
-        const idx = list.findIndex(b => b.id === blockId);
-        if (idx === -1) return;
-        const block = list.splice(idx, 1)[0];
         const clamped = Math.max(1, Math.min(targetIndex, list.length + 1));
-        console.debug('moveBlockToIndex', { blockId, zone, fromIndex: idx + 1, requested: targetIndex, clamped, listLength: list.length + 1 });
-        list.splice(clamped - 1, 0, block);
-        this.rebuildLinkedList(zone);
+        const targetBlock = list[clamped - 1] || null;
+        const position = targetBlock ? 'before' : 'after';
+        const targetId = targetBlock ? targetBlock.id : null;
+        console.debug('moveBlockToIndex', { blockId, zone, requested: targetIndex, clamped, targetId, position });
+        this.insertBlockRelative(block, zone, targetId, position);
     }
     
     addBlock(type, content = '', zone = 'workspace', position = -1) {
