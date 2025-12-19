@@ -82,7 +82,7 @@ class BlockFactory {
         if (zone === 'workspace') {
             const toTopBtn = document.createElement('button');
             toTopBtn.className = 'block-btn';
-            toTopBtn.textContent = '⇤';
+            toTopBtn.textContent = '⤒';
             toTopBtn.title = 'Move to top';
             toTopBtn.onclick = (e) => {
                 e.stopPropagation();
@@ -96,7 +96,7 @@ class BlockFactory {
             if (index > 0) {
                 const upBtn = document.createElement('button');
                 upBtn.className = 'block-btn';
-                upBtn.textContent = '↑';
+                upBtn.textContent = '▲';
                 upBtn.title = 'Move up';
                 upBtn.onclick = () => this.app.moveBlock(block.id, 'up');
                 controls.appendChild(upBtn);
@@ -105,7 +105,7 @@ class BlockFactory {
             if (index < this.app.workspaceBlocks.length - 1) {
                 const downBtn = document.createElement('button');
                 downBtn.className = 'block-btn';
-                downBtn.textContent = '↓';
+                downBtn.textContent = '▼';
                 downBtn.title = 'Move down';
                 downBtn.onclick = () => this.app.moveBlock(block.id, 'down');
                 controls.appendChild(downBtn);
@@ -113,7 +113,7 @@ class BlockFactory {
             
             const toBottomBtn = document.createElement('button');
             toBottomBtn.className = 'block-btn';
-            toBottomBtn.textContent = '⇥';
+            toBottomBtn.textContent = '⤓';
             toBottomBtn.title = 'Move to bottom';
             toBottomBtn.onclick = (e) => {
                 e.stopPropagation();
@@ -130,21 +130,23 @@ class BlockFactory {
             cacheBtn.onclick = () => this.app.moveBlockToCache(block.id);
             controls.appendChild(cacheBtn);
             
-            const indexInput = document.createElement('input');
-            indexInput.type = 'number';
-            indexInput.className = 'block-index-input';
-            indexInput.title = 'Set index (integer)';
-            indexInput.value = block.index || index + 1;
-            indexInput.onchange = (e) => {
-                const value = parseInt(e.target.value, 10);
-                if (!isNaN(value)) {
-                    this.app.moveBlockToIndex(block.id, 'workspace', value);
+            const indexBtn = document.createElement('button');
+            indexBtn.className = 'block-btn';
+            indexBtn.textContent = `Index #${block.index || index + 1}`;
+            indexBtn.title = 'Set index (integer)';
+            indexBtn.onclick = (e) => {
+                e.stopPropagation();
+                const value = prompt('Set index (integer)', (block.index || index + 1).toString());
+                if (value === null) return;
+                const num = parseInt(value, 10);
+                if (!isNaN(num)) {
+                    this.app.moveBlockToIndex(block.id, 'workspace', num);
                     this.app.renderBlocks();
                     this.app.outlineManager.update();
                     this.app.saveToLocalStorage();
                 }
             };
-            controls.appendChild(indexInput);
+            controls.appendChild(indexBtn);
         } else {
             // Cache zone
             const restoreEndBtn = document.createElement('button');
@@ -326,7 +328,8 @@ class BlockFactory {
         const btn = document.createElement('button');
         btn.className = 'block-done-btn';
         btn.textContent = 'Done';
-        btn.onclick = () => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
             const el = document.querySelector(`.blocks-container [data-block-id="${blockId}"], .cache-container [data-block-id="${blockId}"]`);
             const mode = el?.dataset.editMode || 'inline';
             this.toggleEditMode(blockId, mode);

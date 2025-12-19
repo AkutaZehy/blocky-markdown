@@ -6,6 +6,7 @@ class DragDropManager {
         this.draggedOverBlock = null;
         this.draggedOverZone = null;
         this.draggedOverPosition = 'before';
+        this.autoscrollThreshold = 60;
     }
     
     setup() {
@@ -90,6 +91,17 @@ class DragDropManager {
                 // Get the zone from the container
                 const zone = blockElement.closest('[data-drop-zone]').dataset.dropZone;
                 this.moveBlockToPosition(this.draggedBlock, blockId, zone, this.draggedOverPosition);
+            }
+        });
+        
+        // Auto-scroll on window edges
+        document.addEventListener('dragover', (e) => {
+            const { clientY } = e;
+            const vh = window.innerHeight;
+            if (clientY < this.autoscrollThreshold) {
+                window.scrollBy(0, -20);
+            } else if (clientY > vh - this.autoscrollThreshold) {
+                window.scrollBy(0, 20);
             }
         });
     }

@@ -90,6 +90,15 @@ class BlockyMarkdown {
             this.saveToLocalStorage();
         });
         
+        // Clear workspace
+        document.getElementById('clearWorkspaceBtn').addEventListener('click', () => {
+            this.workspaceBlocks = [];
+            this.rebuildLinkedList('workspace');
+            this.renderBlocks();
+            this.outlineManager.update();
+            this.saveToLocalStorage();
+        });
+        
         // Close modal on background click
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', (e) => {
@@ -300,11 +309,8 @@ class BlockyMarkdown {
         const index = blocks.findIndex(b => b.id === blockId);
         if (index === -1) return;
         
-        const newIndex = direction === 'up' ? index - 1 : index + 1;
-        if (newIndex < 0 || newIndex >= blocks.length) return;
-        
-        [blocks[index], blocks[newIndex]] = [blocks[newIndex], blocks[index]];
-        this.rebuildLinkedList('workspace');
+        const targetPos = direction === 'up' ? index : index + 2;
+        this.moveBlockToIndex(blockId, 'workspace', targetPos);
         this.renderBlocks();
         this.outlineManager.update();
         this.saveToLocalStorage();

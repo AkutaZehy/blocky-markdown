@@ -130,7 +130,18 @@ class MarkdownUtils {
             blocks.push({ type: currentBlock.type, content: currentBlock.content.trim() });
         }
         
-        return blocks;
+        // Merge consecutive paragraph blocks
+        const merged = [];
+        for (let i = 0; i < blocks.length; i++) {
+            const blk = blocks[i];
+            if (blk.type === 'paragraph' && merged.length > 0 && merged[merged.length - 1].type === 'paragraph') {
+                merged[merged.length - 1].content += '\n' + blk.content;
+            } else {
+                merged.push(blk);
+            }
+        }
+        
+        return merged;
     }
     
     static exportBlocks(blocks) {

@@ -202,29 +202,21 @@ body {
     margin-right: 4px;
 }
 
+.outline-heading-level {
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+    flex-shrink: 0;
+}
+
+.outline-count {
+    margin-top: 12px;
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+}
+
 /* Hierarchical outline indentation */
-.outline-item[data-level="1"] {
-    padding-left: 8px;
-}
-
-.outline-item[data-level="2"] {
-    padding-left: 24px;
-}
-
-.outline-item[data-level="3"] {
-    padding-left: 40px;
-}
-
-.outline-item[data-level="4"] {
-    padding-left: 56px;
-}
-
-.outline-item[data-level="5"] {
-    padding-left: 72px;
-}
-
-.outline-item[data-level="6"] {
-    padding-left: 88px;
+.outline-item[data-level] {
+    padding-left: 0;
 }
 
 /* Collapse/expand toggle */
@@ -282,6 +274,10 @@ body {
     color: var(--secondary-color);
     margin-bottom: 12px;
     font-family: var(--font-family);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 /* Add Block Toolbar (Top) */

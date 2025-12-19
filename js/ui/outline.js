@@ -7,6 +7,7 @@ class OutlineManager {
     update() {
         const outlineContent = document.getElementById('outlineContent');
         outlineContent.innerHTML = '';
+        const totalCount = this.app.workspaceBlocks.length;
         
         let headingStack = [];
         const visibleBlocks = new Set();
@@ -61,13 +62,18 @@ class OutlineManager {
                 }
             }
         });
+        
+        const countDiv = document.createElement('div');
+        countDiv.className = 'outline-count';
+        countDiv.textContent = `Workspace blocks: ${totalCount}`;
+        outlineContent.appendChild(countDiv);
     }
     
     createOutlineItem(block, level, text, index, isHeading) {
         const item = document.createElement('div');
         item.className = 'outline-item';
         item.dataset.blockId = block.id;
-        item.style.paddingLeft = (level * 20) + 'px';
+        item.style.paddingLeft = '0px';
         item.dataset.level = level;
         
         // Add toggle for headings
@@ -92,6 +98,12 @@ class OutlineManager {
         tag.className = 'outline-item-tag';
         tag.textContent = BlockRenderer.getBlockTypeLabel(block.type);
         
+        const levelSpan = document.createElement('span');
+        levelSpan.className = 'outline-heading-level';
+        if (isHeading) {
+            levelSpan.textContent = `H${level}`;
+        }
+        
         const textSpan = document.createElement('span');
         textSpan.className = 'outline-item-text';
         textSpan.textContent = text;
@@ -104,6 +116,7 @@ class OutlineManager {
         item.appendChild(indexSpan);
         item.appendChild(tag);
         if (isHeading) {
+            item.appendChild(levelSpan);
             item.appendChild(textSpan);
         }
         
