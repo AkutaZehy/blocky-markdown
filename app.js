@@ -269,18 +269,28 @@ class BlockyMarkdown {
         }
     }
     
-    registerTip(selector, text) {
-        document.querySelectorAll(selector).forEach(el => {
-            el.addEventListener('mouseenter', () => this.setTip(text));
-            el.addEventListener('mouseleave', () => this.setTip(this.defaultTip));
+    registerTip (selector, text) {
+        document.querySelectorAll(selector).forEach((el) => {
+            el.dataset.tipRegistered = "true";
+            el.addEventListener("mouseenter", () => this.setTip(text));
+            el.addEventListener("mouseleave", () =>
+this.setTip(this.defaultTip)
+);
         });
     }
     
-    registerTipFromElements(selector) {
-        document.querySelectorAll(selector).forEach(el => {
-            const text = el.title || el.getAttribute('aria-label') || el.textContent.trim();
-            el.addEventListener('mouseenter', () => this.setTip(text));
-            el.addEventListener('mouseleave', () => this.setTip(this.defaultTip));
+    registerTipFromElements (selector) {
+        document.querySelectorAll(selector).forEach((el) => {
+            if (el.dataset.tipRegistered === "true") {
+                return;
+            }
+
+            const text =
+                el.title || el.getAttribute("aria-label") || el.textContent.trim();
+            el.addEventListener("mouseenter", () => this.setTip(text));
+            el.addEventListener("mouseleave", () =>
+                this.setTip(this.defaultTip)
+            );
         });
     }
     
