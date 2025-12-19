@@ -276,6 +276,14 @@ class BlockyMarkdown {
         });
     }
     
+    registerTipFromElements(selector) {
+        document.querySelectorAll(selector).forEach(el => {
+            const text = el.title || el.getAttribute('aria-label') || el.textContent.trim();
+            el.addEventListener('mouseenter', () => this.setTip(text));
+            el.addEventListener('mouseleave', () => this.setTip(this.defaultTip));
+        });
+    }
+    
     recordHistory() {
         if (this.isRestoringHistory) return;
         const snapshot = {
@@ -512,6 +520,7 @@ class BlockyMarkdown {
             cacheContainer.appendChild(blockElement);
         });
         this.updatePreviewUI();
+        this.registerTipFromElements('.btn, .block-btn, .btn-add');
     }
     
     closeAllEditModes() {

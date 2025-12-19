@@ -79,6 +79,16 @@ body {
     color: var(--primary-color);
 }
 
+.bottom-bar {
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    z-index: 100;
+    background: var(--surface-color);
+}
+
 .toolbar {
     display: flex;
     gap: 8px;
@@ -826,6 +836,15 @@ body {
     border-radius: 6px;
     margin-bottom: 12px;
     background: var(--bg-secondary);
+}
+
+.blocks-container ol,
+.blocks-container ul,
+.workspace-preview ol,
+.workspace-preview ul {
+    padding-left: 1.4rem;
+    margin-left: 0;
+    list-style-position: outside;
 }
 
 /* Edit/Preview mode styles */

@@ -97,6 +97,7 @@
                 <!-- Add block toolbar at top (sticky) -->
                 <div class="add-block-toolbar-sticky">
                     <button id="addPosToggle" class="btn btn-secondary btn-small" title="Click to toggle">Add → End</button>
+                    <button id="previewToggle" class="btn btn-secondary btn-small" title="Toggle preview/edit">Preview</button>
                     <button class="btn-add" data-type="frontmatter" title="Frontmatter"><span class="tag">[frontmatter]</span></button>
                     <button class="btn-add" data-type="paragraph" title="Paragraph"><span class="tag">[p]</span></button>
                     <button class="btn-add" data-type="heading" title="Heading"><span class="tag">[h]</span></button>
@@ -112,6 +113,7 @@
                 </div>
 
                 <div class="workspace-content">
+                    <div id="previewContainer" class="workspace-preview" style="display: none;"></div>
                     <div id="blocksContainer" class="blocks-container" data-drop-zone="workspace">
                         <!-- Blocks will be added here dynamically -->
                     </div>
@@ -130,6 +132,25 @@
                 </div>
             </aside>
         </div>
+
+        <!-- Bottom tips / toolbar bar -->
+        <header class="header bottom-bar">
+            <div class="logo" id="tipsText">Blocky Markdown</div>
+            <div class="toolbar">
+                <button id="undoBtn" class="btn btn-secondary" title="Undo (Ctrl+Z)">↺ Undo</button>
+                <button id="redoBtn" class="btn btn-secondary" title="Redo (Ctrl+Y)">↻ Redo</button>
+                <button id="historyLimitBtn" class="btn btn-secondary" title="Set history limit">History</button>
+                <button id="themeToggle" class="btn btn-secondary">
+                    <span class="icon">☀</span> Theme
+                </button>
+                <button id="importBtn" class="btn btn-primary" title="Import markdown">
+                    <span class="icon">↓</span> Import
+                </button>
+                <button id="exportBtn" class="btn btn-primary" title="Export markdown (Ctrl+S)">
+                    <span class="icon">↑</span> Export
+                </button>
+            </div>
+        </header>
     </div>
 
     <!-- Modal for Import -->

@@ -72,6 +72,8 @@ class OutlineManager {
         item.dataset.blockId = block.id;
         item.style.paddingLeft = '0px';
         item.dataset.level = level;
+        const blockIndex = block.index || (index + 1);
+        item.title = `[h${level}] #${blockIndex} ${text}`;
         
         // Add toggle for headings only if they have children
         if (isHeading && hasChild) {
@@ -101,7 +103,6 @@ class OutlineManager {
         
         const indexSpan = document.createElement('span');
         indexSpan.className = 'outline-item-index';
-        const blockIndex = block.index || (index + 1);
         indexSpan.textContent = `#${blockIndex}`;
         
         item.appendChild(indexSpan);
@@ -110,6 +111,13 @@ class OutlineManager {
             item.appendChild(levelSpan);
             item.appendChild(textSpan);
         }
+        
+        item.addEventListener('mouseenter', () => {
+            if (this.app.setTip) this.app.setTip(item.title);
+        });
+        item.addEventListener('mouseleave', () => {
+            if (this.app.setTip) this.app.setTip(this.app.defaultTip);
+        });
         
         item.onclick = () => {
             if (isHeading && hasChild) {
@@ -126,6 +134,9 @@ class OutlineManager {
                 setTimeout(() => {
                     blockElement.style.boxShadow = '';
                 }, 1000);
+            }
+            if (this.app.setTip) {
+                this.app.setTip(item.title);
             }
         };
         
