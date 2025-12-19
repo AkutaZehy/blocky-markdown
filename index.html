@@ -1,198 +1,320 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
     <title>Blocky Markdown Editor</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body data-theme="daytime">
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-theme="daytime">
     <div class="app-layout">
-        <!-- Header -->
-        <header class="header">
-            <h1 class="logo">Blocky Markdown</h1>
-            <div class="toolbar">
-                <button id="themeToggle" class="btn btn-secondary">
-                    <span class="icon">☀</span> Theme
-                </button>
-                <button id="importBtn" class="btn btn-primary">
-                    <span class="icon">↓</span> Import
-                </button>
-                <button id="exportBtn" class="btn btn-primary">
-                    <span class="icon">↑</span> Export
-                </button>
+      <!-- Main Layout - 3 Column Resizable -->
+      <div class="main-layout">
+        <!-- Outline Sidebar -->
+        <aside class="outline-sidebar" id="outlineSidebar">
+          <h3>Outline</h3>
+          <div id="outlineContent" class="outline-content">
+            <!-- Outline will be generated here -->
+          </div>
+        </aside>
+        <div class="resizer" id="outlineResizer"></div>
+
+        <!-- Editor Area (Workspace) -->
+        <main class="editor-area" id="editorArea">
+          <div class="workspace-label">Workspace</div>
+          <!-- Add block toolbar at top (sticky) -->
+          <div class="add-block-toolbar-sticky">
+            <button
+              id="addPosToggle"
+              class="btn btn-secondary btn-small"
+              title="Click to toggle"
+            >
+              Add → End
+            </button>
+            <button
+              id="previewToggle"
+              class="btn btn-secondary btn-small"
+              title="Toggle preview/edit"
+            >
+              Preview
+            </button>
+            <button
+              class="btn-add"
+              data-type="frontmatter"
+              title="Frontmatter"
+            >
+              <span class="tag">[frontmatter]</span>
+            </button>
+            <button
+              class="btn-add"
+              data-type="paragraph"
+              title="Paragraph"
+            >
+              <span class="tag">[p]</span>
+            </button>
+            <button class="btn-add" data-type="heading" title="Heading">
+              <span class="tag">[h]</span>
+            </button>
+            <button class="btn-add" data-type="list" title="List">
+              <span class="tag">[list]</span>
+            </button>
+            <button class="btn-add" data-type="code" title="Code">
+              <span class="tag">[code]</span>
+            </button>
+            <button class="btn-add" data-type="table" title="Table">
+              <span class="tag">[table]</span>
+            </button>
+            <button class="btn-add" data-type="quote" title="Quote">
+              <span class="tag">[quote]</span>
+            </button>
+            <button class="btn-add" data-type="hr" title="Horizontal Rule">
+              <span class="tag">[hr]</span>
+            </button>
+            <button class="btn-add" data-type="br" title="Line Break">
+              <span class="tag">[br]</span>
+            </button>
+            <button class="btn-add" data-type="html" title="HTML">
+              <span class="tag">[html]</span>
+            </button>
+            <button class="btn-add" data-type="mermaid" title="Mermaid">
+              <span class="tag">[mermaid]</span>
+            </button>
+            <button
+              id="clearWorkspaceBtn"
+              class="btn btn-small btn-secondary"
+            >
+              Clear Workspace
+            </button>
+          </div>
+
+          <div class="workspace-content">
+            <div
+              id="previewContainer"
+              class="workspace-preview"
+              style="display: none"
+            ></div>
+            <div
+              id="blocksContainer"
+              class="blocks-container"
+              data-drop-zone="workspace"
+            >
+              <!-- Blocks will be added here dynamically -->
             </div>
-        </header>
+          </div>
+        </main>
+        <div class="resizer" id="cacheResizer"></div>
 
-        <!-- Main Layout - 3 Column Resizable -->
-        <div class="main-layout">
-            <!-- Outline Sidebar -->
-            <aside class="outline-sidebar" id="outlineSidebar">
-                <h3>Outline</h3>
-                <div id="outlineContent" class="outline-content">
-                    <!-- Outline will be generated here -->
-                </div>
-            </aside>
-            <div class="resizer" id="outlineResizer"></div>
+        <!-- Cache Area -->
+        <aside class="cache-sidebar" id="cacheSidebar">
+          <div class="cache-label">
+            <span>Cache Area</span>
+            <button id="clearCacheBtn" class="btn btn-small btn-secondary">
+              Clear
+            </button>
+          </div>
+          <div
+            id="cacheContainer"
+            class="cache-container"
+            data-drop-zone="cache"
+          >
+            <!-- Cached blocks will be shown here -->
+          </div>
+        </aside>
+      </div>
 
-            <!-- Editor Area (Workspace) -->
-            <main class="editor-area" id="editorArea">
-                <!-- Add block toolbar at top (sticky) -->
-                <div class="add-block-toolbar-sticky">
-                    <button class="btn-add" data-type="frontmatter" title="Frontmatter"><span class="tag">[frontmatter]</span></button>
-                    <button class="btn-add" data-type="paragraph" title="Paragraph"><span class="tag">[p]</span></button>
-                    <button class="btn-add" data-type="heading" title="Heading"><span class="tag">[h]</span></button>
-                    <button class="btn-add" data-type="list" title="List"><span class="tag">[list]</span></button>
-                    <button class="btn-add" data-type="code" title="Code"><span class="tag">[code]</span></button>
-                    <button class="btn-add" data-type="table" title="Table"><span class="tag">[table]</span></button>
-                    <button class="btn-add" data-type="quote" title="Quote"><span class="tag">[quote]</span></button>
-                    <button class="btn-add" data-type="hr" title="Horizontal Rule"><span class="tag">[hr]</span></button>
-                    <button class="btn-add" data-type="br" title="Line Break"><span class="tag">[br]</span></button>
-                    <button class="btn-add" data-type="html" title="HTML"><span class="tag">[html]</span></button>
-                    <button class="btn-add" data-type="mermaid" title="Mermaid"><span class="tag">[mermaid]</span></button>
-                </div>
-
-                <div class="workspace-content">
-                    <div class="workspace-label">Workspace</div>
-                    <div id="blocksContainer" class="blocks-container" data-drop-zone="workspace">
-                        <!-- Blocks will be added here dynamically -->
-                    </div>
-                </div>
-            </main>
-            <div class="resizer" id="cacheResizer"></div>
-
-            <!-- Cache Area -->
-            <aside class="cache-sidebar" id="cacheSidebar">
-                <div class="cache-label">Cache Area</div>
-                <div id="cacheContainer" class="cache-container" data-drop-zone="cache">
-                    <!-- Cached blocks will be shown here -->
-                </div>
-            </aside>
+      <!-- Header (now bottom tips bar) -->
+      <header class="header bottom-bar">
+        <div class="logo" id="tipsText">Blocky Markdown</div>
+        <div class="toolbar">
+          <button
+            id="undoBtn"
+            class="btn btn-secondary"
+            title="Undo (Ctrl+Z)"
+          >
+            ↺ Undo
+          </button>
+          <button
+            id="redoBtn"
+            class="btn btn-secondary"
+            title="Redo (Ctrl+Y)"
+          >
+            ↻ Redo
+          </button>
+          <button
+            id="historyLimitBtn"
+            class="btn btn-secondary"
+            title="Set history limit"
+          >
+            History
+          </button>
+          <button id="themeToggle" class="btn btn-secondary">
+            <span class="icon">☀</span> Theme
+          </button>
+          <button id="importBtn" class="btn btn-primary">
+            <span class="icon">↓</span> Import
+          </button>
+          <button id="exportBtn" class="btn btn-primary">
+            <span class="icon">↑</span> Export
+          </button>
         </div>
+      </header>
     </div>
 
     <!-- Modal for Import -->
     <div id="importModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Import Markdown</h2>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <textarea id="importTextarea" placeholder="Paste your markdown here..."></textarea>
-            </div>
-            <div class="modal-footer">
-                <button id="importConfirm" class="btn btn-primary">Import</button>
-                <button class="btn btn-secondary modal-close">Cancel</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Import Markdown</h2>
+          <button class="modal-close">&times;</button>
         </div>
+        <div class="modal-body">
+          <textarea
+            id="importTextarea"
+            placeholder="Paste your markdown here..."
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button id="importConfirm" class="btn btn-primary">
+            Import
+          </button>
+          <button class="btn btn-secondary modal-close">Cancel</button>
+        </div>
+      </div>
     </div>
 
     <!-- Modal for Export -->
     <div id="exportModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Export Markdown</h2>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <textarea id="exportTextarea" readonly></textarea>
-            </div>
-            <div class="modal-footer">
-                <button id="copyBtn" class="btn btn-primary">Copy</button>
-                <button id="downloadBtn" class="btn btn-primary">Download</button>
-                <button class="btn btn-secondary modal-close">Close</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Export Markdown</h2>
+          <button class="modal-close">&times;</button>
         </div>
+        <div class="modal-body">
+          <textarea id="exportTextarea" readonly></textarea>
+        </div>
+        <div class="modal-footer">
+          <button id="copyBtn" class="btn btn-primary">Copy</button>
+          <button id="downloadBtn" class="btn btn-primary">
+            Download
+          </button>
+          <button class="btn btn-secondary modal-close">Close</button>
+        </div>
+      </div>
     </div>
 
     <!-- Modal for Enhanced Table Editor -->
     <div id="tableModal" class="modal">
-        <div class="modal-content modal-xlarge">
-            <div class="modal-header">
-                <h2>Table Editor</h2>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body table-editor-body">
-                <div class="table-editor-layout">
-                    <!-- Left: Table Grid -->
-                    <div class="table-grid-section">
-                        <div class="table-controls">
-                            <button id="addRowBtn" class="btn btn-small">+ Row</button>
-                            <button id="removeRowBtn" class="btn btn-small">- Row</button>
-                            <button id="addColBtn" class="btn btn-small">+ Col</button>
-                            <button id="removeColBtn" class="btn btn-small">- Col</button>
-                        </div>
-                        <div id="tableEditor" class="table-editor"></div>
-                    </div>
-                    
-                    <!-- Right: Cell Content Editor -->
-                    <div class="cell-editor-section">
-                        <h3>Cell Editor</h3>
-                        <div class="selected-cell-info">
-                            <span id="selectedCellLabel">Select a cell to edit</span>
-                        </div>
-                        <textarea id="cellContentEditor" placeholder="Select a cell to edit its content..."></textarea>
-                        <button id="insertLinkInCell" class="btn btn-small" style="margin-top: 10px;">Insert Link</button>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="tableConfirm" class="btn btn-primary">Confirm</button>
-                <button class="btn btn-secondary modal-close">Cancel</button>
-            </div>
+      <div class="modal-content modal-xlarge">
+        <div class="modal-header">
+          <h2>Table Editor</h2>
+          <button class="modal-close">&times;</button>
         </div>
+        <div class="modal-body table-editor-body">
+          <div class="table-editor-layout">
+            <!-- Left: Table Grid -->
+            <div class="table-grid-section">
+              <div class="table-controls">
+                <button id="addRowBtn" class="btn btn-small">+ Row</button>
+                <button id="removeRowBtn" class="btn btn-small">
+                  - Row
+                </button>
+                <button id="addColBtn" class="btn btn-small">+ Col</button>
+                <button id="removeColBtn" class="btn btn-small">
+                  - Col
+                </button>
+              </div>
+              <div id="tableEditor" class="table-editor"></div>
+            </div>
+
+            <!-- Right: Cell Content Editor -->
+            <div class="cell-editor-section">
+              <h3>Cell Editor</h3>
+              <div class="selected-cell-info">
+                <span id="selectedCellLabel">Select a cell to edit</span>
+              </div>
+              <textarea
+                id="cellContentEditor"
+                placeholder="Select a cell to edit its content..."
+              ></textarea>
+              <button
+                id="insertLinkInCell"
+                class="btn btn-small"
+                style="margin-top: 10px"
+              >
+                Insert Link
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="tableConfirm" class="btn btn-primary">
+            Confirm
+          </button>
+          <button class="btn btn-secondary modal-close">Cancel</button>
+        </div>
+      </div>
     </div>
 
     <!-- Modal for Link Editor -->
     <div id="linkModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Insert Link</h2>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="linkText">Link Text:</label>
-                    <input type="text" id="linkText" placeholder="Enter link text">
-                </div>
-                <div class="form-group">
-                    <label for="linkUrl">URL:</label>
-                    <input type="text" id="linkUrl" placeholder="https://example.com">
-                </div>
-                <div class="form-group">
-                    <label for="linkTitle">Title (optional):</label>
-                    <input type="text" id="linkTitle" placeholder="Link title">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="linkConfirm" class="btn btn-primary">Insert</button>
-                <button class="btn btn-secondary modal-close">Cancel</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Insert Link</h2>
+          <button class="modal-close">&times;</button>
         </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="linkText">Link Text:</label>
+            <input
+              type="text"
+              id="linkText"
+              placeholder="Enter link text"
+            />
+          </div>
+          <div class="form-group">
+            <label for="linkUrl">URL:</label>
+            <input
+              type="text"
+              id="linkUrl"
+              placeholder="https://example.com"
+            />
+          </div>
+          <div class="form-group">
+            <label for="linkTitle">Title (optional):</label>
+            <input type="text" id="linkTitle" placeholder="Link title" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="linkConfirm" class="btn btn-primary">Insert</button>
+          <button class="btn btn-secondary modal-close">Cancel</button>
+        </div>
+      </div>
     </div>
 
     <!-- External libraries -->
     <script src="https://unpkg.com/marked@11.1.1/marked.min.js"></script>
-    
+
     <!-- Fallback markdown parser -->
     <script src="markdown-parser.js"></script>
-    
+
     <!-- Utility modules -->
     <script src="js/utils/storage.js"></script>
     <script src="js/utils/markdown.js"></script>
     <script src="js/utils/renderer.js"></script>
-    
+
     <!-- UI modules -->
     <script src="js/ui/outline.js"></script>
     <script src="js/ui/dragdrop.js"></script>
     <script src="js/ui/linkeditor.js"></script>
     <script src="js/ui/tableeditor.js"></script>
-    
+
     <!-- Block modules -->
     <script src="js/blocks/factory.js"></script>
-    
+
     <!-- Main application script -->
     <script src="app.js"></script>
-</body>
+  </body>
 </html>

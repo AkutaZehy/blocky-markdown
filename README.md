@@ -84,49 +84,25 @@ All blocks use clean HTML-style tags (no emojis):
 
 ## Usage
 
-1. **Open the Editor**
-   - Open `index.html` in your web browser
-   - No installation or build process required
+### 1) Import
+- Open `index.html` in your browser (no build needed).
+- Click **↓ Import**, paste Markdown (frontmatter supported), confirm. Consecutive paragraphs auto-merge; history snapshot is taken.
 
-2. **Choose Your Theme**
-   - Click the ☀/🌙 button to toggle themes
-   - Preference saves automatically
+### 2) Edit
+- **Add blocks**: Toolbar tags ([p], [h], [list], etc.). Toggle **Add → Start/End** to choose insertion point.
+- **Outline**: Heading-only list with level-colored toggles (shown only when children exist). Click once to toggle + jump.
+- **Reorder**: Drag blocks (before/after targets); move buttons (top/up/down/bottom) and **Index #** prompt reinsert via linked-list model. Move to **Cache** or restore to workspace end.
+- **Inline vs. focus edit**: Click block to edit inline; use **Edit/Done** for focus mode. Tip bar (bottom) shows contextual hints.
+- **Preview**: Use **Preview/Edit** toggle to render current workspace (Marked fallback).
+- **Undo/Redo**: Buttons or **Ctrl+Z / Ctrl+Y**. History limit configurable via **History** (default 100). **Clear Workspace/Cache** available. Resizers adjust outline/workspace/cache widths. Tooltips on buttons/outline/toggles/block controls.
 
-3. **Adding Blocks**
-   - Use toolbar buttons at top of workspace
-   - Tags show block types: [p], [h], [list], etc.
+### 3) Export
+- Click **↑ Export** (or **Ctrl+S**) to open export modal; copy or download rendered Markdown.
 
-4. **Using the Outline**
-   - View document structure in left sidebar
-   - Click ▼/▶ to collapse/expand sections
-   - Click items to jump to blocks
-
-5. **Resizing Panels**
-   - Drag vertical dividers between columns
-   - Adjust outline, workspace, and cache widths
-
-6. **Inserting Links**
-   - Click "Insert Link" in paragraph or list blocks
-   - Use "Insert Link" in table cell editor
-   - Fill in text, URL, and optional title
-   - Link inserts at cursor position
-
-7. **Managing Blocks**
-   - Drag blocks to reposition or move to cache
-   - Use ↑↓ buttons for adjacent swapping
-   - "Cache" button moves to cache area
-   - "Delete" (in cache) permanently removes
-
-8. **Editing Tables**
-   - Click "Edit" on table blocks
-   - Use +/- Row/Col buttons
-   - Select cells to edit in right panel
-   - Insert links in cells with button
-
-9. **Import/Export**
-   - Click "↓ Import" to paste markdown
-   - Click "↑ Export" to copy or download
-   - Supports Jekyll frontmatter
+### 4) Experience settings
+- **Theme**: ☀/🌙 toggle (persists locally).
+- **History limit**: Set via **History** dialog.
+- **Preview toggle** and **tips bar** to monitor current action or hovered control.
 
 ## Technologies Used
 
