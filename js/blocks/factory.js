@@ -10,6 +10,16 @@ class BlockFactory {
         div.dataset.blockId = block.id;
         div.dataset.editing = 'false';
         div.dataset.editMode = '';
+        div.addEventListener('mouseenter', () => {
+            if (this.app.setTip) {
+                this.app.setTip(`Current block: #${block.index || index + 1} [${block.type}]`);
+            }
+        });
+        div.addEventListener('mouseleave', () => {
+            if (this.app.setTip) {
+                this.app.setTip(this.app.defaultTip);
+            }
+        });
         
         // Block header
         const header = this.createBlockHeader(block, index, zone);

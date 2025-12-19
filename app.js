@@ -11,6 +11,8 @@ class BlockyMarkdown {
         this.redoStack = [];
         this.maxHistory = 100;
         this.isRestoringHistory = false;
+        this.previewMode = false;
+        this.defaultTip = 'Blocky Markdown';
         
         // Initialize managers
         this.outlineManager = new OutlineManager(this);
@@ -36,6 +38,9 @@ class BlockyMarkdown {
         this.linkEditor.setup();
         this.tableEditor.setup();
         this.updateAddPositionUI();
+        this.updatePreviewUI();
+        this.setTip(this.defaultTip);
+        this.updatePreviewUI();
         
         // If no blocks exist, add a welcome block
         if (this.workspaceBlocks.length === 0) {
@@ -59,6 +64,11 @@ class BlockyMarkdown {
             }
         });
         
+        document.getElementById('previewToggle').addEventListener('click', () => {
+            this.previewMode = !this.previewMode;
+            this.updatePreviewUI();
+        });
+        
         // Add block buttons
         document.querySelectorAll('.btn-add').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -79,6 +89,15 @@ class BlockyMarkdown {
         // Import/Export buttons
         document.getElementById('importBtn').addEventListener('click', () => this.showImportModal());
         document.getElementById('exportBtn').addEventListener('click', () => this.showExportModal());
+        
+        this.registerTip('#undoBtn', 'Click to undo (Ctrl+Z)');
+        this.registerTip('#redoBtn', 'Click to redo (Ctrl+Y)');
+        this.registerTip('#historyLimitBtn', 'Set history steps');
+        this.registerTip('#themeToggle', 'Toggle theme');
+        this.registerTip('#importBtn', 'Import markdown');
+        this.registerTip('#exportBtn', 'Export markdown (Ctrl+S)');
+        this.registerTip('#previewToggle', 'Toggle preview/edit');
+        this.registerTip('#addPosToggle', 'Click to toggle add position');
         
         // Modal controls
         document.querySelectorAll('.modal-close').forEach(btn => {
@@ -162,6 +181,32 @@ class BlockyMarkdown {
         }
     }
     
+    updatePreviewUI() {
+        const previewContainer = document.getElementById('previewContainer');
+        const blocksContainer = document.getElementById('blocksContainer');
+        const btn = document.getElementById('previewToggle');
+        if (!previewContainer || !blocksContainer || !btn) return;
+        
+        if (this.previewMode) {
+            const markdown = MarkdownUtils.exportBlocks(this.workspaceBlocks);
+            if (typeof marked !== 'undefined') {
+                previewContainer.innerHTML = marked.parse(markdown);
+            } else {
+                previewContainer.textContent = markdown;
+            }
+            previewContainer.style.display = 'block';
+            blocksContainer.style.display = 'none';
+            btn.textContent = 'Edit';
+            btn.title = 'Switch to edit mode';
+        } else {
+            previewContainer.style.display = 'none';
+            blocksContainer.style.display = 'block';
+            btn.textContent = 'Preview';
+            btn.title = 'Toggle preview/edit';
+        }
+        this.setTip(this.defaultTip);
+    }
+    
     setupResizer(resizer, panel, side) {
         let isResizing = false;
         let startX = 0;
@@ -215,6 +260,20 @@ class BlockyMarkdown {
             const themeBtn = document.getElementById('themeToggle');
             themeBtn.textContent = this.currentTheme === 'daytime' ? '☀ Theme' : '🌙 Theme';
         }
+    }
+    
+    setTip(text) {
+        const el = document.getElementById('tipsText');
+        if (el) {
+            el.textContent = text || this.defaultTip;
+        }
+    }
+    
+    registerTip(selector, text) {
+        document.querySelectorAll(selector).forEach(el => {
+            el.addEventListener('mouseenter', () => this.setTip(text));
+            el.addEventListener('mouseleave', () => this.setTip(this.defaultTip));
+        });
     }
     
     recordHistory() {
@@ -399,6 +458,7 @@ class BlockyMarkdown {
         this.renderBlocks();
         this.outlineManager.update();
         this.saveToLocalStorage();
+        this.recordHistory();
     }
     
     moveBlockToCache(blockId) {
@@ -451,6 +511,7 @@ class BlockyMarkdown {
             const blockElement = this.blockFactory.createBlock(block, index, 'cache');
             cacheContainer.appendChild(blockElement);
         });
+        this.updatePreviewUI();
     }
     
     closeAllEditModes() {

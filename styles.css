@@ -65,6 +65,13 @@ body {
     flex-shrink: 0;
 }
 
+.bottom-bar {
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+    position: sticky;
+    bottom: 0;
+}
+
 .logo {
     font-size: 1.5rem;
     font-weight: 600;
@@ -811,6 +818,14 @@ body {
 .workspace-content {
     flex: 1;
     overflow-y: auto;
+}
+
+.workspace-preview {
+    padding: 12px;
+    border: 1px dashed var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    background: var(--bg-secondary);
 }
 
 /* Edit/Preview mode styles */
