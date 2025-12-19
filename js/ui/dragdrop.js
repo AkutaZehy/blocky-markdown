@@ -111,6 +111,7 @@ class DragDropManager {
     }
     
     moveBlockToZone(blockId, targetZone) {
+        this.app.recordHistory();
         const { block } = this.app.removeBlockById(blockId);
         if (!block) return;
         block.zone = targetZone;
@@ -122,6 +123,7 @@ class DragDropManager {
     }
     
     moveBlockToPosition(draggedBlockId, targetBlockId, targetZone, position) {
+        this.app.recordHistory();
         const { block } = this.app.removeBlockById(draggedBlockId);
         if (!block) {
             console.error('Block not found:', draggedBlockId);

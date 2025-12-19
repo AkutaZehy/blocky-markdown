@@ -7,6 +7,10 @@ class BlockyMarkdown {
         this.currentTheme = 'daytime';
         this.collapsedHeadings = new Set();
         this.addPosition = 'end';
+        this.history = [];
+        this.redoStack = [];
+        this.maxHistory = 100;
+        this.isRestoringHistory = false;
         
         // Initialize managers
         this.outlineManager = new OutlineManager(this);
@@ -25,6 +29,7 @@ class BlockyMarkdown {
         this.setupResizers();
         this.rebuildLinkedList('workspace');
         this.rebuildLinkedList('cache');
+        this.recordHistory();
         
         // Initialize managers
         this.dragDropManager.setup();
@@ -43,6 +48,16 @@ class BlockyMarkdown {
     setupEventListeners() {
         // Theme toggle
         document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
+        document.getElementById('undoBtn').addEventListener('click', () => this.undo());
+        document.getElementById('redoBtn').addEventListener('click', () => this.redo());
+        document.getElementById('historyLimitBtn').addEventListener('click', () => {
+            const value = prompt('Set max history steps (default 100)', this.maxHistory.toString());
+            const num = parseInt(value, 10);
+            if (!isNaN(num) && num > 0) {
+                this.maxHistory = num;
+                this.trimHistory();
+            }
+        });
         
         // Add block buttons
         document.querySelectorAll('.btn-add').forEach(btn => {
@@ -81,6 +96,7 @@ class BlockyMarkdown {
         
         // Clear cache
         document.getElementById('clearCacheBtn').addEventListener('click', () => {
+            this.recordHistory();
             this.cacheBlocks = [];
             this.rebuildLinkedList('cache');
             this.renderBlocks();
@@ -89,11 +105,25 @@ class BlockyMarkdown {
         
         // Clear workspace
         document.getElementById('clearWorkspaceBtn').addEventListener('click', () => {
+            this.recordHistory();
             this.workspaceBlocks = [];
             this.rebuildLinkedList('workspace');
             this.renderBlocks();
             this.outlineManager.update();
             this.saveToLocalStorage();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                this.undo();
+            } else if (e.ctrlKey && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                this.redo();
+            } else if (e.ctrlKey && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                this.showExportModal();
+            }
         });
         
         // Close modal on background click
@@ -187,6 +217,54 @@ class BlockyMarkdown {
         }
     }
     
+    recordHistory() {
+        if (this.isRestoringHistory) return;
+        const snapshot = {
+            workspaceBlocks: JSON.parse(JSON.stringify(this.workspaceBlocks)),
+            cacheBlocks: JSON.parse(JSON.stringify(this.cacheBlocks)),
+            currentBlockId: this.currentBlockId,
+            collapsedHeadings: Array.from(this.collapsedHeadings)
+        };
+        this.history.push(snapshot);
+        this.trimHistory();
+        this.redoStack = [];
+    }
+    
+    trimHistory() {
+        while (this.history.length > this.maxHistory) {
+            this.history.shift();
+        }
+    }
+    
+    applyState(state) {
+        this.isRestoringHistory = true;
+        this.workspaceBlocks = state.workspaceBlocks || [];
+        this.cacheBlocks = state.cacheBlocks || [];
+        this.currentBlockId = state.currentBlockId || 0;
+        this.collapsedHeadings = new Set(state.collapsedHeadings || []);
+        this.rebuildLinkedList('workspace');
+        this.rebuildLinkedList('cache');
+        this.renderBlocks();
+        this.outlineManager.update();
+        this.saveToLocalStorage();
+        this.isRestoringHistory = false;
+    }
+    
+    undo() {
+        if (this.history.length < 2) return;
+        const current = this.history.pop();
+        this.redoStack.push(current);
+        const prev = this.history[this.history.length - 1];
+        this.applyState(prev);
+    }
+    
+    redo() {
+        if (this.redoStack.length === 0) return;
+        const next = this.redoStack.pop();
+        this.history.push(next);
+        this.applyState(next);
+    }
+    
     getList(zone) {
         return zone === 'cache' ? this.cacheBlocks : this.workspaceBlocks;
     }
@@ -261,6 +339,7 @@ class BlockyMarkdown {
     }
     
     moveBlockToIndex(blockId, zone, targetIndex) {
+        this.recordHistory();
         const { block } = this.removeBlockById(blockId);
         if (!block) {
             console.error('moveBlockToIndex: block not found', { blockId, zone, targetIndex });
@@ -277,6 +356,7 @@ class BlockyMarkdown {
     }
     
     addBlock(type, content = '', zone = 'workspace', position = -1) {
+        this.recordHistory();
         const blockId = this.currentBlockId++;
         const block = {
             id: blockId,
@@ -330,6 +410,7 @@ class BlockyMarkdown {
     }
     
     permanentlyDeleteBlock(blockId) {
+        this.recordHistory();
         let index = this.cacheBlocks.findIndex(b => b.id === blockId);
         if (index !== -1) {
             this.cacheBlocks.splice(index, 1);
@@ -393,6 +474,7 @@ class BlockyMarkdown {
     }
     
     importMarkdown() {
+        this.recordHistory();
         const markdown = document.getElementById('importTextarea').value;
         if (!markdown.trim()) {
             alert('Please paste some markdown content');

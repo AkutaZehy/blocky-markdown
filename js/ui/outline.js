@@ -8,6 +8,10 @@ class OutlineManager {
         const outlineContent = document.getElementById('outlineContent');
         outlineContent.innerHTML = '';
         const totalCount = this.app.workspaceBlocks.length;
+        const countDiv = document.createElement('div');
+        countDiv.className = 'outline-count';
+        countDiv.textContent = `Workspace blocks: ${totalCount}`;
+        outlineContent.appendChild(countDiv);
         
         let headingStack = [];
         const visibleBlocks = new Set();
@@ -41,11 +45,6 @@ class OutlineManager {
                 headingStack.push({ level, id: block.id });
             }
         });
-        
-        const countDiv = document.createElement('div');
-        countDiv.className = 'outline-count';
-        countDiv.textContent = `Workspace blocks: ${totalCount}`;
-        outlineContent.appendChild(countDiv);
     }
     
     createOutlineItem(block, level, text, index, isHeading) {
@@ -60,6 +59,7 @@ class OutlineManager {
             const toggle = document.createElement('span');
             toggle.className = 'outline-item-toggle';
             toggle.textContent = this.app.collapsedHeadings.has(block.id) ? '▶' : '▼';
+            toggle.classList.add(`toggle-level-${level}`);
             toggle.onclick = (e) => {
                 e.stopPropagation();
                 this.toggleCollapse(block.id);
