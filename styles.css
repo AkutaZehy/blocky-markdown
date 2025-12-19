@@ -272,12 +272,8 @@ body {
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--secondary-color);
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     font-family: var(--font-family);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
 }
 
 /* Add Block Toolbar (Top) */

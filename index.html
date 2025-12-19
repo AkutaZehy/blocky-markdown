@@ -37,6 +37,7 @@
 
             <!-- Editor Area (Workspace) -->
             <main class="editor-area" id="editorArea">
+                <div class="workspace-label">Workspace</div>
                 <!-- Add block toolbar at top (sticky) -->
                 <div class="add-block-toolbar-sticky">
                     <div class="add-pos-toggles">
@@ -54,13 +55,10 @@
                     <button class="btn-add" data-type="br" title="Line Break"><span class="tag">[br]</span></button>
                     <button class="btn-add" data-type="html" title="HTML"><span class="tag">[html]</span></button>
                     <button class="btn-add" data-type="mermaid" title="Mermaid"><span class="tag">[mermaid]</span></button>
+                    <button id="clearWorkspaceBtn" class="btn btn-small btn-secondary">Clear Workspace</button>
                 </div>
 
                 <div class="workspace-content">
-                    <div class="workspace-label">
-                        <span>Workspace</span>
-                        <button id="clearWorkspaceBtn" class="btn btn-small btn-secondary">Clear</button>
-                    </div>
                     <div id="blocksContainer" class="blocks-container" data-drop-zone="workspace">
                         <!-- Blocks will be added here dynamically -->
                     </div>

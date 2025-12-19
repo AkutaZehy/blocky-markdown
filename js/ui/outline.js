@@ -13,39 +13,17 @@ class OutlineManager {
         const visibleBlocks = new Set();
         
         this.app.workspaceBlocks.forEach((block, index) => {
-            if (block.type === 'heading') {
-                const match = block.content.match(/^(#{1,6})\s(.+)/);
-                if (match) {
-                    const level = match[1].length;
-                    const text = match[2];
-                    
-                    // Update heading stack
-                    while (headingStack.length > 0 && headingStack[headingStack.length - 1].level >= level) {
-                        headingStack.pop();
-                    }
-                    
-                    // Check if parent is collapsed
-                    let isVisible = true;
-                    for (const parent of headingStack) {
-                        if (this.app.collapsedHeadings.has(parent.id)) {
-                            isVisible = false;
-                            break;
-                        }
-                    }
-                    
-                    if (isVisible) {
-                        const item = this.createOutlineItem(block, level, text, index, true);
-                        outlineContent.appendChild(item);
-                        visibleBlocks.add(block.id);
-                    }
-                    
-                    headingStack.push({ level, id: block.id });
-                }
-            } else {
-                // Non-heading blocks
-                const text = '';
+            if (block.type !== 'heading') return;
+            
+            const match = block.content.match(/^(#{1,6})\s(.+)/);
+            if (match) {
+                const level = match[1].length;
+                const text = match[2];
                 
-                // Check if under a collapsed heading
+                while (headingStack.length > 0 && headingStack[headingStack.length - 1].level >= level) {
+                    headingStack.pop();
+                }
+                
                 let isVisible = true;
                 for (const parent of headingStack) {
                     if (this.app.collapsedHeadings.has(parent.id)) {
@@ -55,11 +33,12 @@ class OutlineManager {
                 }
                 
                 if (isVisible) {
-                    const level = headingStack.length > 0 ? headingStack[headingStack.length - 1].level + 1 : 0;
-                    const item = this.createOutlineItem(block, level, text, index, false);
+                    const item = this.createOutlineItem(block, level, text, index, true);
                     outlineContent.appendChild(item);
                     visibleBlocks.add(block.id);
                 }
+                
+                headingStack.push({ level, id: block.id });
             }
         });
         
@@ -96,13 +75,11 @@ class OutlineManager {
         
         const tag = document.createElement('span');
         tag.className = 'outline-item-tag';
-        tag.textContent = BlockRenderer.getBlockTypeLabel(block.type);
+        tag.textContent = `[h${level}]`;
         
         const levelSpan = document.createElement('span');
         levelSpan.className = 'outline-heading-level';
-        if (isHeading) {
-            levelSpan.textContent = `H${level}`;
-        }
+        levelSpan.textContent = '';
         
         const textSpan = document.createElement('span');
         textSpan.className = 'outline-item-text';

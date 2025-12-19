@@ -140,6 +140,7 @@ class BlockFactory {
                 if (value === null) return;
                 const num = parseInt(value, 10);
                 if (!isNaN(num)) {
+                    console.debug('index prompt confirm', { blockId: block.id, fromIndex: block.index || index + 1, toIndex: num });
                     this.app.moveBlockToIndex(block.id, 'workspace', num);
                     this.app.renderBlocks();
                     this.app.outlineManager.update();

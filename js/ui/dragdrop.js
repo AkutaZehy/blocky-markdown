@@ -6,7 +6,7 @@ class DragDropManager {
         this.draggedOverBlock = null;
         this.draggedOverZone = null;
         this.draggedOverPosition = 'before';
-        this.autoscrollThreshold = 60;
+        this.autoscrollThreshold = 120;
     }
     
     setup() {
@@ -27,12 +27,12 @@ class DragDropManager {
                 }
             });
             
-            container.addEventListener('drop', (e) => {
-                e.preventDefault();
-                container.classList.remove('drag-over');
-                
-                if (this.draggedBlock !== null) {
-                    const targetZone = container.dataset.dropZone;
+        container.addEventListener('drop', (e) => {
+            e.preventDefault();
+            container.classList.remove('drag-over');
+            
+            if (this.draggedBlock !== null) {
+                const targetZone = container.dataset.dropZone;
                     
                     // If dropping over a specific block, insert at that position
                     if (this.draggedOverBlock !== null) {
@@ -54,11 +54,13 @@ class DragDropManager {
         blockElement.draggable = true;
         
         blockElement.addEventListener('dragstart', (e) => {
+            console.debug('dragstart', { draggedBlock: blockId });
             this.draggedBlock = blockId;
             blockElement.classList.add('dragging');
         });
         
         blockElement.addEventListener('dragend', () => {
+            console.debug('dragend', { draggedBlock: this.draggedBlock });
             this.draggedBlock = null;
             this.draggedOverBlock = null;
             this.draggedOverZone = null;
@@ -75,6 +77,7 @@ class DragDropManager {
                 blockElement.classList.add('drag-over');
                 blockElement.classList.toggle('drag-over-after', this.draggedOverPosition === 'after');
                 blockElement.classList.toggle('drag-over-before', this.draggedOverPosition === 'before');
+                console.debug('dragover', { draggedBlock: this.draggedBlock, targetBlock: blockId, position: this.draggedOverPosition, zone: blockElement.closest('[data-drop-zone]')?.dataset.dropZone });
             }
         });
         
@@ -90,6 +93,7 @@ class DragDropManager {
             if (this.draggedBlock && this.draggedBlock !== blockId) {
                 // Get the zone from the container
                 const zone = blockElement.closest('[data-drop-zone]').dataset.dropZone;
+                console.debug('drop on block', { draggedBlock: this.draggedBlock, targetBlock: blockId, zone, position: this.draggedOverPosition });
                 this.moveBlockToPosition(this.draggedBlock, blockId, zone, this.draggedOverPosition);
             }
         });
@@ -99,9 +103,9 @@ class DragDropManager {
             const { clientY } = e;
             const vh = window.innerHeight;
             if (clientY < this.autoscrollThreshold) {
-                window.scrollBy(0, -20);
+                window.scrollBy(0, -30);
             } else if (clientY > vh - this.autoscrollThreshold) {
-                window.scrollBy(0, 20);
+                window.scrollBy(0, 30);
             }
         });
     }
@@ -110,6 +114,7 @@ class DragDropManager {
         const { block } = this.app.removeBlockById(blockId);
         if (!block) return;
         block.zone = targetZone;
+        console.debug('moveBlockToZone', { blockId, targetZone });
         this.app.insertBlockRelative(block, targetZone, null, 'after');
         this.app.renderBlocks();
         this.app.outlineManager.update();
@@ -123,6 +128,7 @@ class DragDropManager {
             return;
         }
         block.zone = targetZone;
+        console.debug('moveBlockToPosition', { draggedBlockId, targetBlockId, targetZone, position });
         this.app.insertBlockRelative(block, targetZone, targetBlockId, position || 'before');
         this.app.renderBlocks();
         this.app.outlineManager.update();

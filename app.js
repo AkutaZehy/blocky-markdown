@@ -259,6 +259,7 @@ class BlockyMarkdown {
         block.index = tempIndex;
         list.push(block);
         list.sort((a, b) => (a.index) - (b.index));
+        console.debug('insertBlockRelative', { blockId: block.id, targetZone, targetBlockId, position, tempIndex, listOrder: list.map(b => ({ id: b.id, index: b.index })) });
         this.rebuildLinkedList(targetZone);
     }
     
@@ -268,6 +269,7 @@ class BlockyMarkdown {
         if (idx === -1) return;
         const block = list.splice(idx, 1)[0];
         const clamped = Math.max(1, Math.min(targetIndex, list.length + 1));
+        console.debug('moveBlockToIndex', { blockId, zone, fromIndex: idx + 1, requested: targetIndex, clamped, listLength: list.length + 1 });
         list.splice(clamped - 1, 0, block);
         this.rebuildLinkedList(zone);
     }
@@ -310,6 +312,7 @@ class BlockyMarkdown {
         if (index === -1) return;
         
         const targetPos = direction === 'up' ? index : index + 2;
+        console.debug('moveBlock click', { blockId, direction, fromIndex: index + 1, targetPos });
         this.moveBlockToIndex(blockId, 'workspace', targetPos);
         this.renderBlocks();
         this.outlineManager.update();
