@@ -1,14 +1,14 @@
 // LocalStorage utility functions
 class Storage {
-    static save(key, value) {
+    static save (key, value) {
         try {
             localStorage.setItem(key, JSON.stringify(value));
         } catch (e) {
             console.error('Failed to save to localStorage:', e);
         }
     }
-    
-    static load(key) {
+
+    static load (key) {
         try {
             const value = localStorage.getItem(key);
             return value ? JSON.parse(value) : null;
@@ -17,8 +17,8 @@ class Storage {
             return null;
         }
     }
-    
-    static remove(key) {
+
+    static remove (key) {
         try {
             localStorage.removeItem(key);
         } catch (e) {

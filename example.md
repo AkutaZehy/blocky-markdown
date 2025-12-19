@@ -13,13 +13,13 @@ This is a demonstration document to showcase the block-based markdown editor.
 
 ## Example Table
 
-| Feature | Status | Description |
-| --- | --- | --- |
-| Paragraph Blocks | ✅ | Simple text editing |
-| Headings | ✅ | H1 through H6 |
-| Tables | ✅ | Interactive editor |
-| Links | ✅ | With title support |
-| Code Blocks | ✅ | Syntax highlighting |
+| Feature          | Status | Description         |
+| ---------------- | ------ | ------------------- |
+| Paragraph Blocks | ✅      | Simple text editing |
+| Headings         | ✅      | H1 through H6       |
+| Tables           | ✅      | Interactive editor  |
+| Links            | ✅      | With title support  |
+| Code Blocks      | ✅      | Syntax highlighting |
 
 ## Code Example
 
