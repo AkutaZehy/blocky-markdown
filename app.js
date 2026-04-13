@@ -175,13 +175,22 @@ class BlockyMarkdown {
             } else if (e.ctrlKey && e.key.toLowerCase() === "s") {
                 e.preventDefault();
                 this.showExportModal();
+            } else if (e.key === "Escape") {
+                const activeModals = document.querySelectorAll(".modal.active");
+                if (activeModals.length > 0) {
+                    const topModal = activeModals[activeModals.length - 1];
+                    const cancelBtn = topModal.querySelector(".modal-close");
+                    if (cancelBtn) {
+                        cancelBtn.click();
+                    }
+                }
             }
         });
 
-        // Close modal on background click
+        // Close modal on background click (only if data-backdrop-close is not "false")
         document.querySelectorAll(".modal").forEach((modal) => {
             modal.addEventListener("click", (e) => {
-                if (e.target === modal) {
+                if (e.target === modal && modal.dataset.backdropClose !== "false") {
                     modal.classList.remove("active");
                 }
             });
