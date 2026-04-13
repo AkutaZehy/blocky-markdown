@@ -2,6 +2,10 @@
 
 一个极简主义的、无需框架的 Markdown 编辑器，提供块状编辑和层级文档导航功能。
 
+<p align="center">
+  <img src="./preview.png" alt="preview"/>
+</p>
+
 ## 主要功能
 
 - 📑 **层级大纲** - 可折叠的标题结构，带级别缩进

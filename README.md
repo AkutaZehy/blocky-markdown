@@ -2,6 +2,10 @@
 
 A minimalist, framework-free markdown editor with a block-based interface and hierarchical document navigation.
 
+<p align="center">
+  <img src="./preview.png" alt="preview"/>
+</p>
+
 ## Features
 
 - 📑 **Hierarchical Outline** - Collapsible heading structure with level indentation
