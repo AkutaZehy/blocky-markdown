@@ -675,7 +675,6 @@ class BlockyMarkdown {
     }
 
     importMarkdown () {
-        this.recordHistory();
         const markdown = document.getElementById("importTextarea").value;
         if (!markdown.trim()) {
             alert("Please paste some markdown content");
@@ -688,15 +687,24 @@ class BlockyMarkdown {
             }
         }
 
+        this.recordHistory();
+
         this.workspaceBlocks = [];
         this.cacheBlocks = [];
         this.currentBlockId = 0;
 
-        // Parse markdown into blocks
-        const blocks = MarkdownUtils.parseImport(markdown);
-        blocks.forEach((blockData) => {
-            this.addBlock(blockData.type, blockData.content, "workspace");
-        });
+        // Build all blocks in one pass; addBlock would re-render, snapshot
+        // history and refresh the outline once per block
+        const parsed = MarkdownUtils.parseImport(markdown);
+        this.workspaceBlocks = parsed.map((blockData) => ({
+            id: this.currentBlockId++,
+            type: blockData.type,
+            content: blockData.content,
+            zone: "workspace",
+            index: 0,
+            prevId: null,
+            nextId: null,
+        }));
 
         this.rebuildLinkedList("workspace");
         this.renderBlocks();
