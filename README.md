@@ -114,6 +114,7 @@ All blocks use clean HTML-style tags (no emojis):
 - **CSS3** - Dual theme with CSS variables
 - **JavaScript (ES6+)** - Application logic (1333 lines)
 - **Marked.js** - Markdown parsing (with fallback)
+- **DOMPurify** - Sanitizes HTML before it enters the preview pane
 
 ## Browser Compatibility
 

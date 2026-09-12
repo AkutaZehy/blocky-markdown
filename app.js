@@ -234,7 +234,13 @@ class BlockyMarkdown {
         if (this.previewMode) {
             const markdown = MarkdownUtils.exportBlocks(this.workspaceBlocks);
             if (typeof marked !== "undefined") {
-                previewContainer.innerHTML = marked.parse(markdown);
+                const rawHtml = marked.parse(markdown);
+                if (typeof DOMPurify !== "undefined") {
+                    previewContainer.innerHTML = DOMPurify.sanitize(rawHtml);
+                } else {
+                    // Never inject untrusted HTML without a sanitizer
+                    previewContainer.textContent = markdown;
+                }
             } else {
                 previewContainer.textContent = markdown;
             }
