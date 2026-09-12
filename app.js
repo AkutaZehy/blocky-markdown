@@ -11,6 +11,8 @@ class BlockyMarkdown {
         this.redoStack = [];
         this.maxHistory = 100;
         this.isRestoringHistory = false;
+        this.contentEditOpen = false;
+        this.contentEditTimer = null;
         this.previewMode = false;
         this.defaultTip = "Blocky Markdown";
 
@@ -343,8 +345,17 @@ class BlockyMarkdown {
         });
     }
 
+    closeContentEdit () {
+        this.contentEditOpen = false;
+        if (this.contentEditTimer) {
+            clearTimeout(this.contentEditTimer);
+            this.contentEditTimer = null;
+        }
+    }
+
     recordHistory () {
         if (this.isRestoringHistory) return;
+        this.closeContentEdit();
         const snapshot = {
             workspaceBlocks: JSON.parse(JSON.stringify(this.workspaceBlocks)),
             cacheBlocks: JSON.parse(JSON.stringify(this.cacheBlocks)),
@@ -364,6 +375,7 @@ class BlockyMarkdown {
 
     applyState (state) {
         this.isRestoringHistory = true;
+        this.closeContentEdit();
         this.workspaceBlocks = state.workspaceBlocks || [];
         this.cacheBlocks = state.cacheBlocks || [];
         this.currentBlockId = state.currentBlockId || 0;
@@ -579,6 +591,20 @@ class BlockyMarkdown {
     }
 
     updateBlockContent (blockId, content) {
+        // Open one history entry per typing burst so content edits are
+        // undoable: the pre-edit state is recorded once, then the burst is
+        // kept open until input goes idle (or a structural action records
+        // its own entry).
+        if (!this.contentEditOpen) {
+            this.recordHistory();
+            this.contentEditOpen = true;
+        }
+        clearTimeout(this.contentEditTimer);
+        this.contentEditTimer = setTimeout(() => {
+            this.contentEditOpen = false;
+            this.contentEditTimer = null;
+        }, 3000);
+
         let block = this.workspaceBlocks.find((b) => b.id === blockId);
         if (!block) {
             block = this.cacheBlocks.find((b) => b.id === blockId);
