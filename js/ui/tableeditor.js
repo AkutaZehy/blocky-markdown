@@ -4,6 +4,61 @@ class TableEditorManager {
         this.app = blockyMarkdown;
         this.currentEditingTableBlockId = null;
         this.selectedTableCell = null;
+        this.currentAlignments = null;
+    }
+
+    // Split a markdown table row into cell values. Empty cells are kept
+    // (they define column positions) and escaped pipes (\|) are unescaped.
+    static splitTableRow (line) {
+        let s = line.trim();
+        if (s.startsWith('|')) s = s.slice(1);
+        if (s.endsWith('|')) s = s.slice(0, -1);
+        return s.split(/(?<!\\)\|/).map((cell) => cell.trim().replace(/\\\|/g, '|'));
+    }
+
+    static isSeparatorRow (line) {
+        const cells = TableEditorManager.splitTableRow(line);
+        return cells.length > 0 && cells.every((cell) => /^:?-+:?$/.test(cell));
+    }
+
+    // Parse markdown into a grid of cell values plus per-column alignments
+    // taken from the separator row. Returns null when no table rows exist.
+    static parseTableGrid (markdown) {
+        const lines = markdown.trim().split('\n')
+            .filter((line) => line.trim().startsWith('|'));
+        if (lines.length === 0) return null;
+
+        const rows = [];
+        const alignments = [];
+        lines.forEach((line, idx) => {
+            if (idx === 1 && TableEditorManager.isSeparatorRow(line)) {
+                TableEditorManager.splitTableRow(line).forEach((cell, colIdx) => {
+                    const left = cell.startsWith(':');
+                    const right = cell.endsWith(':');
+                    alignments[colIdx] = left && right ? ':---:' : right ? '---:' : left ? ':---' : '---';
+                });
+                return;
+            }
+            rows.push(TableEditorManager.splitTableRow(line));
+        });
+        return { rows, alignments };
+    }
+
+    static buildTableMarkdown (rows, alignments = []) {
+        if (rows.length === 0) return '';
+        const cols = rows.reduce((max, row) => Math.max(max, row.length), 0);
+        const escapeCell = (value) => (value || '').replace(/\|/g, '\\|');
+        const renderRow = (cells) => {
+            const padded = cells.slice();
+            while (padded.length < cols) padded.push('');
+            return '| ' + padded.map((cell) => escapeCell(cell.trim())).join(' | ') + ' |';
+        };
+        const separator = '| ' + Array.from({ length: cols }, (_, j) => alignments[j] || '---').join(' | ') + ' |';
+        const lines = [renderRow(rows[0]), separator];
+        for (let i = 1; i < rows.length; i++) {
+            lines.push(renderRow(rows[i]));
+        }
+        return lines.join('\n');
     }
 
     setup () {
@@ -37,6 +92,7 @@ class TableEditorManager {
         if (block.content) {
             this.parseTableContent(block.content);
         } else {
+            this.currentAlignments = [];
             this.generateTableEditor(3, 3);
         }
 
@@ -44,27 +100,27 @@ class TableEditorManager {
     }
 
     parseTableContent (markdown) {
-        const lines = markdown.trim().split('\n');
-        const rows = lines.filter(line => line.trim().startsWith('|'));
-
-        if (rows.length > 0) {
-            const headerRow = rows[0].split('|').filter(cell => cell.trim());
-            const cols = headerRow.length;
-            const dataRows = rows.filter((_, idx) => idx !== 1);
-
-            this.generateTableEditor(dataRows.length, cols);
-
-            const table = document.querySelector('#tableEditor table');
-            dataRows.forEach((row, rowIdx) => {
-                const cells = row.split('|').filter(cell => cell.trim());
-                cells.forEach((cell, colIdx) => {
-                    const input = table.rows[rowIdx]?.cells[colIdx]?.querySelector('input');
-                    if (input) {
-                        input.value = cell.trim();
-                    }
-                });
-            });
+        const grid = TableEditorManager.parseTableGrid(markdown);
+        if (!grid || grid.rows.length === 0) {
+            this.currentAlignments = [];
+            this.generateTableEditor(3, 3);
+            return;
         }
+
+        const rows = grid.rows;
+        const cols = rows.reduce((max, row) => Math.max(max, row.length), 0);
+        this.currentAlignments = grid.alignments;
+        this.generateTableEditor(rows.length, cols);
+
+        const table = document.querySelector('#tableEditor table');
+        rows.forEach((cells, rowIdx) => {
+            cells.forEach((cell, colIdx) => {
+                const input = table.rows[rowIdx]?.cells[colIdx]?.querySelector('input');
+                if (input) {
+                    input.value = cell;
+                }
+            });
+        });
     }
 
     generateTableEditor (rows = 3, cols = 3) {
@@ -211,35 +267,20 @@ class TableEditorManager {
         const table = document.querySelector('#tableEditor table');
         if (!table) return;
 
-        const rows = table.rows.length;
-        const cols = table.rows[0]?.cells.length || 0;
-
-        let markdown = '';
-
-        // Header row
-        let headerRow = '|';
-        for (let j = 0; j < cols; j++) {
-            const input = table.rows[0].cells[j].querySelector('input');
-            headerRow += ' ' + (input.value || `Col ${j + 1}`) + ' |';
+        const rows = [];
+        Array.from(table.rows).forEach((tr) => {
+            const row = Array.from(tr.cells).map((td) => {
+                const input = td.querySelector('input');
+                return input ? input.value : '';
+            });
+            rows.push(row);
+        });
+        // Keep the original default naming for empty header cells
+        if (rows.length > 0) {
+            rows[0] = rows[0].map((value, j) => value || `Col ${j + 1}`);
         }
-        markdown += headerRow + '\n';
 
-        // Separator row
-        let separator = '|';
-        for (let j = 0; j < cols; j++) {
-            separator += ' --- |';
-        }
-        markdown += separator + '\n';
-
-        // Data rows
-        for (let i = 1; i < rows; i++) {
-            let dataRow = '|';
-            for (let j = 0; j < cols; j++) {
-                const input = table.rows[i].cells[j].querySelector('input');
-                dataRow += ' ' + (input.value || '') + ' |';
-            }
-            markdown += dataRow + '\n';
-        }
+        const markdown = TableEditorManager.buildTableMarkdown(rows, this.currentAlignments || []);
 
         if (this.currentEditingTableBlockId !== null) {
             this.app.updateBlockContent(this.currentEditingTableBlockId, markdown.trim());
@@ -249,5 +290,6 @@ class TableEditorManager {
         document.getElementById('tableModal').classList.remove('active');
         this.currentEditingTableBlockId = null;
         this.selectedTableCell = null;
+        this.currentAlignments = null;
     }
 }
