@@ -489,14 +489,20 @@ class BlockyMarkdown {
     }
 
     moveBlockToIndex (blockId, zone, targetIndex) {
-        this.recordHistory();
-        const { block } = this.removeBlockById(blockId);
-        if (!block) {
+        const exists =
+            this.workspaceBlocks.some((b) => b.id === blockId) ||
+            this.cacheBlocks.some((b) => b.id === blockId);
+        if (!exists) {
             console.error("moveBlockToIndex: block not found", {
                 blockId,
                 zone,
                 targetIndex,
             });
+            return;
+        }
+        this.recordHistory();
+        const { block } = this.removeBlockById(blockId);
+        if (!block) {
             return;
         }
         block.zone = zone;
@@ -568,7 +574,6 @@ class BlockyMarkdown {
         this.renderBlocks();
         this.outlineManager.update();
         this.saveToLocalStorage();
-        this.recordHistory();
     }
 
     moveBlockToCache (blockId) {
