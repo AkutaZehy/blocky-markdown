@@ -34,20 +34,21 @@
             html = html.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
             html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
 
+            // Images (must run before links, or the inner [alt](url) of
+            // ![alt](url) would be converted to an anchor first)
+            html = html.replace(/!\[([^\]]*)\]\(([^)"]+)(?:\s+"([^"]+)")?\)/g, function (match, alt, url, title) {
+                if (title) {
+                    return '<img src="' + url + '" alt="' + alt + '" title="' + title + '">';
+                }
+                return '<img src="' + url + '" alt="' + alt + '">';
+            });
+
             // Links
             html = html.replace(/\[([^\]]+)\]\(([^)"]+)(?:\s+"([^"]+)")?\)/g, function (match, text, url, title) {
                 if (title) {
                     return '<a href="' + url + '" title="' + title + '">' + text + '</a>';
                 }
                 return '<a href="' + url + '">' + text + '</a>';
-            });
-
-            // Images
-            html = html.replace(/!\[([^\]]*)\]\(([^)"]+)(?:\s+"([^"]+)")?\)/g, function (match, alt, url, title) {
-                if (title) {
-                    return '<img src="' + url + '" alt="' + alt + '" title="' + title + '">';
-                }
-                return '<img src="' + url + '" alt="' + alt + '">';
             });
 
             // Tables
