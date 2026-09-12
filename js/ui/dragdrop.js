@@ -13,6 +13,19 @@ class DragDropManager {
         const workspaceContainer = document.getElementById('blocksContainer');
         const cacheContainer = document.getElementById('cacheContainer');
 
+        // Auto-scroll near window edges while dragging blocks.
+        // Single document-level listener (never re-registered per block).
+        document.addEventListener('dragover', (e) => {
+            if (this.draggedBlock === null) return;
+            const { clientY } = e;
+            const vh = window.innerHeight;
+            if (clientY < this.autoscrollThreshold) {
+                window.scrollBy(0, -30);
+            } else if (clientY > vh - this.autoscrollThreshold) {
+                window.scrollBy(0, 30);
+            }
+        });
+
         // Container drop zones
         [workspaceContainer, cacheContainer].forEach(container => {
             container.addEventListener('dragover', (e) => {
@@ -95,17 +108,6 @@ class DragDropManager {
                 const zone = blockElement.closest('[data-drop-zone]').dataset.dropZone;
                 console.debug('drop on block', { draggedBlock: this.draggedBlock, targetBlock: blockId, zone, position: this.draggedOverPosition });
                 this.moveBlockToPosition(this.draggedBlock, blockId, zone, this.draggedOverPosition);
-            }
-        });
-
-        // Auto-scroll on window edges
-        document.addEventListener('dragover', (e) => {
-            const { clientY } = e;
-            const vh = window.innerHeight;
-            if (clientY < this.autoscrollThreshold) {
-                window.scrollBy(0, -30);
-            } else if (clientY > vh - this.autoscrollThreshold) {
-                window.scrollBy(0, 30);
             }
         });
     }
