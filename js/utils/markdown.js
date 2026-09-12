@@ -16,12 +16,26 @@ class MarkdownUtils {
         let codeBlockContent = '';
         let inMermaidBlock = false;
 
+        // Push the block being accumulated (if any) so that a new block
+        // type starting on the next line never silently discards it.
+        const flushCurrent = () => {
+            if (currentBlock && currentBlock.content.trim()) {
+                blocks.push({ type: currentBlock.type, content: currentBlock.content.trim() });
+            }
+            currentBlock = null;
+        };
+        const startBlock = (type) => {
+            flushCurrent();
+            currentBlock = { type: type, content: '' };
+        };
+
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
 
             // Code blocks
             if (line.startsWith('```')) {
                 if (!inCodeBlock && !inMermaidBlock) {
+                    flushCurrent();
                     inCodeBlock = true;
                     codeBlockContent = line;
                     if (line.includes('mermaid')) {
@@ -49,12 +63,14 @@ class MarkdownUtils {
 
             // Horizontal rules
             if (line.match(/^[-*_]{3,}$/)) {
+                flushCurrent();
                 blocks.push({ type: 'hr', content: '---' });
                 continue;
             }
 
             // Headings
             if (line.match(/^#{1,6}\s/)) {
+                flushCurrent();
                 blocks.push({ type: 'heading', content: line });
                 continue;
             }
@@ -62,7 +78,7 @@ class MarkdownUtils {
             // Tables
             if (line.trim().startsWith('|')) {
                 if (!currentBlock || currentBlock.type !== 'table') {
-                    currentBlock = { type: 'table', content: '' };
+                    startBlock('table');
                 }
                 currentBlock.content += line + '\n';
                 continue;
@@ -74,7 +90,7 @@ class MarkdownUtils {
             // Lists
             if (line.match(/^[\s]*[-*+]\s/) || line.match(/^[\s]*\d+\.\s/)) {
                 if (!currentBlock || currentBlock.type !== 'list') {
-                    currentBlock = { type: 'list', content: '' };
+                    startBlock('list');
                 }
                 currentBlock.content += line + '\n';
                 continue;
@@ -86,7 +102,7 @@ class MarkdownUtils {
             // Quotes
             if (line.startsWith('>')) {
                 if (!currentBlock || currentBlock.type !== 'quote') {
-                    currentBlock = { type: 'quote', content: '' };
+                    startBlock('quote');
                 }
                 currentBlock.content += line + '\n';
                 continue;
@@ -95,17 +111,19 @@ class MarkdownUtils {
                 currentBlock = null;
             }
 
-            // HTML blocks
-            if (line.match(/^<[a-z]+/i)) {
-                if (!currentBlock || currentBlock.type !== 'html') {
-                    currentBlock = { type: 'html', content: '' };
+            // HTML blocks: accumulate everything (including plain lines)
+            // until a closing tag is seen
+            if (currentBlock && currentBlock.type === 'html') {
+                currentBlock.content += line + '\n';
+                if (line.match(/<\/[a-z]+>/i)) {
+                    blocks.push({ type: 'html', content: currentBlock.content.trim() });
+                    currentBlock = null;
                 }
-                currentBlock.content += line + '\n';
                 continue;
-            } else if (currentBlock && currentBlock.type === 'html' && line.match(/<\/[a-z]+>/i)) {
+            }
+            if (line.match(/^<[a-z]+/i)) {
+                startBlock('html');
                 currentBlock.content += line + '\n';
-                blocks.push({ type: 'html', content: currentBlock.content.trim() });
-                currentBlock = null;
                 continue;
             }
 
@@ -120,14 +138,17 @@ class MarkdownUtils {
 
             // Paragraphs - multiple consecutive lines form one paragraph
             if (!currentBlock || currentBlock.type !== 'paragraph') {
-                currentBlock = { type: 'paragraph', content: '' };
+                startBlock('paragraph');
             }
             currentBlock.content += (currentBlock.content ? '\n' : '') + line;
         }
 
         // Add any remaining block
-        if (currentBlock) {
-            blocks.push({ type: currentBlock.type, content: currentBlock.content.trim() });
+        flushCurrent();
+
+        // Add an unterminated code fence so its content is not lost
+        if (inCodeBlock || inMermaidBlock) {
+            blocks.push({ type: inMermaidBlock ? 'mermaid' : 'code', content: codeBlockContent.trim() });
         }
 
         // Merge consecutive paragraph blocks

@@ -135,6 +135,15 @@ Works in all modern browsers supporting:
 
 **No Surprises**: Blocks move to cache instead of immediate deletion. Undo by dragging back.
 
+## Development
+
+Unit tests for the markdown parsing logic use the Node.js built-in test
+runner (Node 18+, no dependencies):
+
+```bash
+node --test
+```
+
 ## License
 
 MIT License - See LICENSE file for details
