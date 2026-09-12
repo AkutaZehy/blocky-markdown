@@ -115,6 +115,7 @@ All blocks use clean HTML-style tags (no emojis):
 - **JavaScript (ES6+)** - Application logic (1333 lines)
 - **Marked.js** - Markdown parsing (with fallback)
 - **DOMPurify** - Sanitizes HTML before it enters the preview pane
+- **Mermaid.js** - Renders mermaid diagrams in the preview (lazy-loaded when needed)
 
 ## Browser Compatibility
 

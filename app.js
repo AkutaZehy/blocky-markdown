@@ -13,6 +13,7 @@ class BlockyMarkdown {
         this.isRestoringHistory = false;
         this.contentEditOpen = false;
         this.contentEditTimer = null;
+        this.mermaidLoading = null;
         this.previewMode = false;
         this.defaultTip = "Blocky Markdown";
 
@@ -225,6 +226,66 @@ class BlockyMarkdown {
         }
     }
 
+    // Lazy-load mermaid.js (only when a preview actually contains a
+    // mermaid block). Resolves null when the library is unavailable, so
+    // callers can keep the fenced code block as fallback.
+    loadMermaid () {
+        if (this.mermaidLoading) return this.mermaidLoading;
+        if (window.mermaid && typeof window.mermaid.run === "function") {
+            return Promise.resolve(window.mermaid);
+        }
+        this.mermaidLoading = new Promise((resolve) => {
+            const script = document.createElement("script");
+            script.src = "https://unpkg.com/mermaid@11/dist/mermaid.min.js";
+            script.onload = () => {
+                const mermaid = window.mermaid;
+                if (mermaid && typeof mermaid.run === "function") {
+                    try {
+                        mermaid.initialize({
+                            startOnLoad: false,
+                            suppressErrorRendering: true,
+                        });
+                    } catch (e) {
+                        // keep library defaults on initialize failure
+                    }
+                    resolve(mermaid);
+                } else {
+                    this.mermaidLoading = null;
+                    resolve(null);
+                }
+            };
+            script.onerror = () => {
+                this.mermaidLoading = null;
+                resolve(null);
+            };
+            document.head.appendChild(script);
+        });
+        return this.mermaidLoading;
+    }
+
+    renderMermaidPreview (container) {
+        const codeBlocks = container.querySelectorAll("pre code.language-mermaid");
+        if (codeBlocks.length === 0) return;
+
+        this.loadMermaid().then((mermaid) => {
+            if (!mermaid) return;
+            const nodes = [];
+            codeBlocks.forEach((codeEl) => {
+                const pre = codeEl.closest("pre");
+                if (!pre || !pre.isConnected) return;
+                const div = document.createElement("div");
+                div.className = "mermaid";
+                div.textContent = codeEl.textContent;
+                pre.replaceWith(div);
+                nodes.push(div);
+            });
+            if (nodes.length === 0) return;
+            mermaid.run({ nodes }).catch(() => {
+                // invalid diagram source stays visible as text
+            });
+        });
+    }
+
     updatePreviewUI () {
         const previewContainer = document.getElementById("previewContainer");
         const blocksContainer = document.getElementById("blocksContainer");
@@ -244,6 +305,7 @@ class BlockyMarkdown {
             } else {
                 previewContainer.textContent = markdown;
             }
+            this.renderMermaidPreview(previewContainer);
             previewContainer.style.display = "block";
             blocksContainer.style.display = "none";
             btn.textContent = "Edit";
