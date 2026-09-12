@@ -447,8 +447,15 @@ class BlockyMarkdown {
     applyState (state) {
         this.isRestoringHistory = true;
         this.closeContentEdit();
-        this.workspaceBlocks = state.workspaceBlocks || [];
-        this.cacheBlocks = state.cacheBlocks || [];
+        // Deep-copy: assigning the snapshot arrays directly would make the
+        // live lists share references with the history entry, so later
+        // edits would mutate stored snapshots.
+        this.workspaceBlocks = JSON.parse(
+            JSON.stringify(state.workspaceBlocks || [])
+        );
+        this.cacheBlocks = JSON.parse(
+            JSON.stringify(state.cacheBlocks || [])
+        );
         this.currentBlockId = state.currentBlockId || 0;
         this.collapsedHeadings = new Set(state.collapsedHeadings || []);
         this.rebuildLinkedList("workspace");
