@@ -421,16 +421,19 @@ class BlockyMarkdown {
         }
     }
 
-    recordHistory () {
-        if (this.isRestoringHistory) return;
-        this.closeContentEdit();
-        const snapshot = {
+    snapshot () {
+        return {
             workspaceBlocks: JSON.parse(JSON.stringify(this.workspaceBlocks)),
             cacheBlocks: JSON.parse(JSON.stringify(this.cacheBlocks)),
             currentBlockId: this.currentBlockId,
             collapsedHeadings: Array.from(this.collapsedHeadings),
         };
-        this.history.push(snapshot);
+    }
+
+    recordHistory () {
+        if (this.isRestoringHistory) return;
+        this.closeContentEdit();
+        this.history.push(this.snapshot());
         this.trimHistory();
         this.redoStack = [];
     }
@@ -458,8 +461,10 @@ class BlockyMarkdown {
 
     undo () {
         if (this.history.length < 2) return;
-        const current = this.history.pop();
-        this.redoStack.push(current);
+        this.history.pop();
+        // The live state being undone was never pushed to history (entries
+        // are pre-action states); snapshot it so redo can come back to it.
+        this.redoStack.push(this.snapshot());
         const prev = this.history[this.history.length - 1];
         this.applyState(prev);
     }
