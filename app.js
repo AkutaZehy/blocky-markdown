@@ -4,6 +4,7 @@ class BlockyMarkdown {
         this.workspaceBlocks = [];
         this.cacheBlocks = [];
         this.currentBlockId = 0;
+        this.blockElements = new Map();
         this.currentTheme = "daytime";
         this.collapsedHeadings = new Set();
         this.addPosition = "end";
@@ -399,6 +400,7 @@ class BlockyMarkdown {
             if (el.dataset.tipRegistered === "true") {
                 return;
             }
+            el.dataset.tipRegistered = "true";
 
             const text =
                 el.title || el.getAttribute("aria-label") || el.textContent.trim();
@@ -454,6 +456,9 @@ class BlockyMarkdown {
         );
         this.currentBlockId = state.currentBlockId || 0;
         this.collapsedHeadings = new Set(state.collapsedHeadings || []);
+        // The restored blocks are new objects; close inline editors that
+        // still reference the pre-restore versions.
+        this.blockFactory.forcePreviewAll();
         this.rebuildLinkedList("workspace");
         this.rebuildLinkedList("cache");
         this.renderBlocks();
@@ -698,34 +703,52 @@ class BlockyMarkdown {
         }
     }
 
+    getBlockById (blockId) {
+        return (
+            this.workspaceBlocks.find((b) => b.id === blockId) ||
+            this.cacheBlocks.find((b) => b.id === blockId)
+        );
+    }
+
     renderBlocks () {
         this.rebuildLinkedList("workspace");
         this.rebuildLinkedList("cache");
         const workspaceContainer = document.getElementById("blocksContainer");
         const cacheContainer = document.getElementById("cacheContainer");
 
-        workspaceContainer.innerHTML = "";
-        cacheContainer.innerHTML = "";
+        // Drop elements whose blocks no longer exist in either zone
+        const liveIds = new Set([
+            ...this.workspaceBlocks.map((b) => b.id),
+            ...this.cacheBlocks.map((b) => b.id),
+        ]);
+        for (const [id, el] of this.blockElements) {
+            if (!liveIds.has(id)) {
+                el.remove();
+                this.blockElements.delete(id);
+            }
+        }
 
-        this.workspaceBlocks.forEach((block, index) => {
-            const blockElement = this.blockFactory.createBlock(
-                block,
-                index,
-                "workspace"
-            );
-            workspaceContainer.appendChild(blockElement);
-        });
-
-        this.cacheBlocks.forEach((block, index) => {
-            const blockElement = this.blockFactory.createBlock(
-                block,
-                index,
-                "cache"
-            );
-            cacheContainer.appendChild(blockElement);
-        });
+        this.renderZone("workspace", workspaceContainer);
+        this.renderZone("cache", cacheContainer);
         this.updatePreviewUI();
         this.registerTipFromElements(".btn, .block-btn, .btn-add");
+    }
+
+    // Keyed render: reuse a block's element across renders (moving it into
+    // place with appendChild) instead of wiping both containers. This keeps
+    // drag listeners attached once and lets unchanged blocks skip work.
+    renderZone (zone, container) {
+        const list = this.getList(zone);
+        list.forEach((block, index) => {
+            let el = this.blockElements.get(block.id);
+            if (!el) {
+                el = this.blockFactory.createBlock(block, index, zone);
+                this.blockElements.set(block.id, el);
+            } else {
+                this.blockFactory.refreshBlock(el, block, index, zone);
+            }
+            container.appendChild(el);
+        });
     }
 
     closeAllEditModes () {
@@ -782,6 +805,12 @@ class BlockyMarkdown {
             nextId: null,
         }));
 
+        // Imported ids restart at 0 and may collide with elements still in
+        // the reuse map from the previous document.
+        for (const el of this.blockElements.values()) {
+            el.remove();
+        }
+        this.blockElements.clear();
         this.rebuildLinkedList("workspace");
         this.renderBlocks();
         this.outlineManager.update();

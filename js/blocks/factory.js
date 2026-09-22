@@ -10,9 +10,13 @@ class BlockFactory {
         div.dataset.blockId = block.id;
         div.dataset.editing = 'false';
         div.dataset.editMode = '';
+        div.dataset.zone = zone;
+        // Resolve the block at event time: undo/redo and import replace the
+        // block objects while the element itself is reused across renders.
         div.addEventListener('mouseenter', () => {
-            if (this.app.setTip) {
-                this.app.setTip(`Current block: #${block.index || index + 1} [${block.type}]`);
+            const current = this.app.getBlockById(block.id);
+            if (this.app.setTip && current) {
+                this.app.setTip(`Current block: #${current.index} [${current.type}]`);
             }
         });
         div.addEventListener('mouseleave', () => {
@@ -24,26 +28,22 @@ class BlockFactory {
         // Block header
         const header = this.createBlockHeader(block, index, zone);
         div.appendChild(header);
+        div._headerSig = this.headerSignature(block, index, zone);
 
         // Block content (preview by default)
         const content = document.createElement('div');
         content.className = 'block-content';
         content.addEventListener('click', (e) => {
-            if (block.type === 'hr' || block.type === 'br') return;
+            const current = this.app.getBlockById(block.id);
+            if (!current || current.type === 'hr' || current.type === 'br') return;
             if (div.dataset.editMode === 'focus') return;
             if (div.dataset.editing === 'false') {
                 this.toggleEditMode(block.id, 'inline');
             }
             e.stopPropagation();
         });
-
-        if (block.type === 'hr' || block.type === 'br') {
-            // These blocks don't need edit mode
-            content.appendChild(this.createPreviewContent(block));
-        } else {
-            // Start in preview mode
-            content.appendChild(this.createPreviewContent(block));
-        }
+        content.appendChild(this.createPreviewContent(block));
+        div._previewSig = this.previewSignature(block);
 
         div.appendChild(content);
 
@@ -51,6 +51,64 @@ class BlockFactory {
         this.app.dragDropManager.setupBlockDrag(div, block.id);
 
         return div;
+    }
+
+    headerSignature (block, index, zone) {
+        const len =
+            zone === 'workspace'
+                ? this.app.workspaceBlocks.length
+                : this.app.cacheBlocks.length;
+        return `${zone}|${index}|${len}|${block.type}`;
+    }
+
+    previewSignature (block) {
+        return `${block.type} ${block.content}`;
+    }
+
+    // Minimal-diff refresh for a reused block element: rebuild the header
+    // only when position/zone/type changed, and the preview only when the
+    // content actually changed. Never touches the DOM while the block is
+    // being edited inline — the textarea owns focus there.
+    refreshBlock (el, block, index, zone) {
+        const headerSig = this.headerSignature(block, index, zone);
+        if (el._headerSig !== headerSig) {
+            const header = el.querySelector('.block-header');
+            if (header) {
+                el.replaceChild(this.createBlockHeader(block, index, zone), header);
+            }
+            el._headerSig = headerSig;
+        }
+        el.dataset.zone = zone;
+
+        if (el.dataset.editing === 'true') return;
+        const previewSig = this.previewSignature(block);
+        if (el._previewSig !== previewSig) {
+            const contentDiv = el.querySelector('.block-content');
+            if (contentDiv) {
+                contentDiv.innerHTML = '';
+                contentDiv.appendChild(this.createPreviewContent(block));
+            }
+            el._previewSig = previewSig;
+        }
+    }
+
+    // Undo/redo and import replace the block objects wholesale, which would
+    // leave any open inline editor holding stale text. Force every editing
+    // element back to a preview of its current block before the next render.
+    forcePreviewAll () {
+        for (const el of this.app.blockElements.values()) {
+            if (el.dataset.editing !== 'true') continue;
+            const block = this.app.getBlockById(parseInt(el.dataset.blockId, 10));
+            el.dataset.editing = 'false';
+            el.dataset.editMode = '';
+            el.draggable = true;
+            const contentDiv = el.querySelector('.block-content');
+            if (contentDiv && block) {
+                contentDiv.innerHTML = '';
+                contentDiv.appendChild(this.createPreviewContent(block));
+                el._previewSig = this.previewSignature(block);
+            }
+        }
     }
 
     createBlockHeader (block, index, zone) {
@@ -71,7 +129,7 @@ class BlockFactory {
             if (value === null) return;
             const num = parseInt(value, 10);
             if (!isNaN(num)) {
-                this.app.moveBlockToIndex(block.id, 'workspace', num);
+                this.app.moveBlockToIndex(block.id, zone, num);
                 this.app.renderBlocks();
                 this.app.outlineManager.update();
                 this.app.saveToLocalStorage();
@@ -397,6 +455,7 @@ class BlockFactory {
             blockElement.dataset.editMode = '';
             blockElement.draggable = true;
             contentDiv.appendChild(this.createPreviewContent(block));
+            blockElement._previewSig = this.previewSignature(block);
         } else {
             // Switch to edit
             blockElement.dataset.editing = 'true';
