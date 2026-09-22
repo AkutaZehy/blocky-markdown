@@ -194,8 +194,9 @@ body {
 
 .outline-item.active {
     background: var(--hover-color);
-    border-left: 3px solid var(--primary-color);
-    padding-left: 5px;
+    /* inset shadow marks the active item without stealing the
+       level-based padding-left the way a border would */
+    box-shadow: inset 3px 0 0 var(--primary-color);
 }
 
 .outline-item-tag {
@@ -231,10 +232,13 @@ body {
     color: var(--secondary-color);
 }
 
-/* Hierarchical outline indentation */
-.outline-item[data-level] {
-    padding-left: 0;
-}
+/* Hierarchical outline indentation: each heading level steps right */
+.outline-item[data-level="1"] { padding-left: 8px; }
+.outline-item[data-level="2"] { padding-left: 22px; }
+.outline-item[data-level="3"] { padding-left: 36px; }
+.outline-item[data-level="4"] { padding-left: 50px; }
+.outline-item[data-level="5"] { padding-left: 64px; }
+.outline-item[data-level="6"] { padding-left: 78px; }
 
 /* Collapse/expand toggle */
 .outline-item-toggle {

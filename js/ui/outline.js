@@ -70,7 +70,6 @@ class OutlineManager {
         const item = document.createElement('div');
         item.className = 'outline-item';
         item.dataset.blockId = block.id;
-        item.style.paddingLeft = '0px';
         item.dataset.level = level;
         const blockIndex = block.index || (index + 1);
         item.title = `[h${level}] #${blockIndex} ${text}`;
