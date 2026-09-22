@@ -34,8 +34,8 @@ class BlockyMarkdown {
         this.loadFromLocalStorage();
         this.loadTheme();
         this.setupResizers();
-        this.rebuildLinkedList("workspace");
-        this.rebuildLinkedList("cache");
+        this.renumberBlocks("workspace");
+        this.renumberBlocks("cache");
         this.recordHistory();
 
         // Initialize managers
@@ -159,7 +159,7 @@ class BlockyMarkdown {
             .addEventListener("click", () => {
                 this.recordHistory();
                 this.cacheBlocks = [];
-                this.rebuildLinkedList("cache");
+                this.renumberBlocks("cache");
                 this.renderBlocks();
                 this.saveToLocalStorage();
             });
@@ -170,7 +170,7 @@ class BlockyMarkdown {
             .addEventListener("click", () => {
                 this.recordHistory();
                 this.workspaceBlocks = [];
-                this.rebuildLinkedList("workspace");
+                this.renumberBlocks("workspace");
                 this.renderBlocks();
                 this.outlineManager.update();
                 this.saveToLocalStorage();
@@ -487,8 +487,8 @@ class BlockyMarkdown {
         // The restored blocks are new objects; close inline editors that
         // still reference the pre-restore versions.
         this.blockFactory.forcePreviewAll();
-        this.rebuildLinkedList("workspace");
-        this.rebuildLinkedList("cache");
+        this.renumberBlocks("workspace");
+        this.renumberBlocks("cache");
         this.renderBlocks();
         this.outlineManager.update();
         this.saveToLocalStorage();
@@ -524,22 +524,17 @@ class BlockyMarkdown {
         }
     }
 
-    rebuildLinkedList (zone) {
+    // Array order is the model; index is a derived 1-based display number.
+    // The sort only matters for documents saved by old versions whose
+    // persisted order could disagree with their stored index values.
+    renumberBlocks (zone) {
         const list = this.getList(zone);
         list.sort(
             (a, b) =>
                 (a.index || list.indexOf(a) + 1) - (b.index || list.indexOf(b) + 1)
         );
-        let prevId = null;
         list.forEach((block, idx) => {
             block.index = idx + 1;
-            block.prevId = prevId;
-            block.nextId = null;
-            if (prevId !== null) {
-                const prevBlock = list[idx - 1];
-                prevBlock.nextId = block.id;
-            }
-            prevId = block.id;
         });
     }
 
@@ -559,7 +554,7 @@ class BlockyMarkdown {
             }
         }
         if (block) {
-            this.rebuildLinkedList(zone);
+            this.renumberBlocks(zone);
         }
         return { block, zone };
     }
@@ -573,28 +568,16 @@ class BlockyMarkdown {
             list.splice(existingIndex, 1);
         }
 
-        let targetBlock = list.find((b) => b.id === targetBlockId);
-        let tempIndex;
-        if (targetBlock) {
-            tempIndex =
-                (targetBlock.index || list.indexOf(targetBlock) + 1) +
-                (position === "after" ? 0.5 : -0.5);
-        } else {
-            tempIndex = list.length + 1;
+        let insertAt = list.length;
+        if (targetBlockId !== null && targetBlockId !== undefined) {
+            const targetIdx = list.findIndex((b) => b.id === targetBlockId);
+            if (targetIdx !== -1) {
+                insertAt = position === "after" ? targetIdx + 1 : targetIdx;
+            }
         }
 
-        block.index = tempIndex;
-        list.push(block);
-        list.sort((a, b) => a.index - b.index);
-        console.debug("insertBlockRelative", {
-            blockId: block.id,
-            targetZone,
-            targetBlockId,
-            position,
-            tempIndex,
-            listOrder: list.map((b) => ({ id: b.id, index: b.index })),
-        });
-        this.rebuildLinkedList(targetZone);
+        list.splice(insertAt, 0, block);
+        this.renumberBlocks(targetZone);
     }
 
     moveBlockToIndex (blockId, zone, targetIndex) {
@@ -616,19 +599,12 @@ class BlockyMarkdown {
         }
         block.zone = zone;
         const list = this.getList(zone);
-        const clamped = Math.max(1, Math.min(targetIndex, list.length + 1));
-        const targetBlock = list[clamped - 1] || null;
-        const position = targetBlock ? "before" : "after";
-        const targetId = targetBlock ? targetBlock.id : null;
-        console.debug("moveBlockToIndex", {
-            blockId,
-            zone,
-            requested: targetIndex,
-            clamped,
-            targetId,
-            position,
-        });
-        this.insertBlockRelative(block, zone, targetId, position);
+        // targetIndex is 1-based (1 = top); the block itself is already
+        // removed, so the insertion slot is targetIndex - 1 in the shorter
+        // list.
+        const insertAt = Math.max(0, Math.min(targetIndex - 1, list.length));
+        list.splice(insertAt, 0, block);
+        this.renumberBlocks(zone);
     }
 
     addBlock (type, content = "", zone = "workspace", position = -1) {
@@ -640,8 +616,6 @@ class BlockyMarkdown {
             content: content,
             zone: zone,
             index: 0,
-            prevId: null,
-            nextId: null,
         };
 
         if (zone === "workspace") {
@@ -655,11 +629,11 @@ class BlockyMarkdown {
                 );
                 this.workspaceBlocks.splice(insertAt, 0, block);
             }
-            this.rebuildLinkedList("workspace");
+            this.renumberBlocks("workspace");
         } else {
             block.index = this.cacheBlocks.length + 1;
             this.cacheBlocks.push(block);
-            this.rebuildLinkedList("cache");
+            this.renumberBlocks("cache");
         }
 
         this.renderBlocks();
@@ -698,7 +672,7 @@ class BlockyMarkdown {
         let index = this.cacheBlocks.findIndex((b) => b.id === blockId);
         if (index !== -1) {
             this.cacheBlocks.splice(index, 1);
-            this.rebuildLinkedList("cache");
+            this.renumberBlocks("cache");
             this.renderBlocks();
             this.saveToLocalStorage();
         }
@@ -738,8 +712,8 @@ class BlockyMarkdown {
     }
 
     renderBlocks () {
-        this.rebuildLinkedList("workspace");
-        this.rebuildLinkedList("cache");
+        this.renumberBlocks("workspace");
+        this.renumberBlocks("cache");
         const workspaceContainer = document.getElementById("blocksContainer");
         const cacheContainer = document.getElementById("cacheContainer");
 
@@ -828,8 +802,6 @@ class BlockyMarkdown {
             content: blockData.content,
             zone: "workspace",
             index: 0,
-            prevId: null,
-            nextId: null,
         }));
 
         // Imported ids restart at 0 and may collide with elements still in
@@ -838,7 +810,7 @@ class BlockyMarkdown {
             el.remove();
         }
         this.blockElements.clear();
-        this.rebuildLinkedList("workspace");
+        this.renumberBlocks("workspace");
         this.renderBlocks();
         this.outlineManager.update();
         this.saveToLocalStorage();
@@ -888,14 +860,25 @@ class BlockyMarkdown {
         const savedId = Storage.load("blockyMarkdownCurrentId");
         const savedCollapsed = Storage.load("blockyMarkdownCollapsedHeadings");
 
+        // Older versions persisted prevId/nextId on every block; array
+        // order is the model now, so shed the dead fields on load.
+        const stripLinkFields = (list) => {
+            list.forEach((b) => {
+                delete b.prevId;
+                delete b.nextId;
+            });
+        };
+
         if (savedWorkspace) {
             this.workspaceBlocks = savedWorkspace;
-            this.rebuildLinkedList("workspace");
+            stripLinkFields(this.workspaceBlocks);
+            this.renumberBlocks("workspace");
         }
 
         if (savedCache) {
             this.cacheBlocks = savedCache;
-            this.rebuildLinkedList("cache");
+            stripLinkFields(this.cacheBlocks);
+            this.renumberBlocks("cache");
         }
 
         if (savedId) {
