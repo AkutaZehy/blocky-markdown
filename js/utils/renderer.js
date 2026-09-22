@@ -17,6 +17,20 @@ export class BlockRenderer {
         return labels[type] || `[${type}]`;
     }
 
+    // Renders markdown through marked + DOMPurify, the same pipeline as the
+    // global preview. Returns null when either library is missing so callers
+    // can fall back to plain text instead of injecting unsanitized HTML.
+    static renderSanitized (markdown) {
+        if (
+            typeof window === 'undefined' ||
+            typeof window.marked === 'undefined' ||
+            typeof window.DOMPurify === 'undefined'
+        ) {
+            return null;
+        }
+        return window.DOMPurify.sanitize(window.marked.parse(markdown));
+    }
+
     static createPreviewElement (block) {
         const div = document.createElement('div');
         div.className = 'block-preview';
