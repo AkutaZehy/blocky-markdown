@@ -1,5 +1,14 @@
 // Main Blocky Markdown Editor Application
-class BlockyMarkdown {
+import { Storage } from "./js/utils/storage.js";
+import { MarkdownUtils } from "./js/utils/markdown.js";
+import { BlockRenderer } from "./js/utils/renderer.js";
+import { OutlineManager } from "./js/ui/outline.js";
+import { DragDropManager } from "./js/ui/dragdrop.js";
+import { LinkEditorManager } from "./js/ui/linkeditor.js";
+import { TableEditorManager } from "./js/ui/tableeditor.js";
+import { BlockFactory } from "./js/blocks/factory.js";
+
+export class BlockyMarkdown {
     constructor() {
         this.workspaceBlocks = [];
         this.cacheBlocks = [];

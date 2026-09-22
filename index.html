@@ -292,28 +292,14 @@
       </div>
     </div>
 
-    <!-- External libraries -->
+    <!-- External libraries (globals consumed by the app module) -->
     <script src="https://unpkg.com/marked@11.1.1/marked.min.js"></script>
     <script src="https://unpkg.com/dompurify@3/dist/purify.min.js"></script>
 
-    <!-- Fallback markdown parser -->
+    <!-- Fallback markdown parser (defines window.marked when the CDN fails) -->
     <script src="markdown-parser.js"></script>
 
-    <!-- Utility modules -->
-    <script src="js/utils/storage.js"></script>
-    <script src="js/utils/markdown.js"></script>
-    <script src="js/utils/renderer.js"></script>
-
-    <!-- UI modules -->
-    <script src="js/ui/outline.js"></script>
-    <script src="js/ui/dragdrop.js"></script>
-    <script src="js/ui/linkeditor.js"></script>
-    <script src="js/ui/tableeditor.js"></script>
-
-    <!-- Block modules -->
-    <script src="js/blocks/factory.js"></script>
-
-    <!-- Main application script -->
-    <script src="app.js"></script>
+    <!-- Application entry: native ES module, still zero build -->
+    <script type="module" src="app.js"></script>
   </body>
 </html>

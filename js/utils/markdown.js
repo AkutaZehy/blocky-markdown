@@ -1,5 +1,5 @@
 // Markdown utility functions
-class MarkdownUtils {
+export class MarkdownUtils {
     static parseImport (markdown) {
         const blocks = [];
 

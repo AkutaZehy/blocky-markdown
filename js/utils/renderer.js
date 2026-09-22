@@ -1,5 +1,5 @@
 // Block rendering utility
-class BlockRenderer {
+export class BlockRenderer {
     static getBlockTypeLabel (type) {
         const labels = {
             'frontmatter': '[frontmatter]',
@@ -67,6 +67,7 @@ class BlockRenderer {
     // can fall back to plain text instead of injecting unsanitized HTML.
     static renderSanitized (markdown) {
         if (
+            typeof window === 'undefined' ||
             typeof window.marked === 'undefined' ||
             typeof window.DOMPurify === 'undefined'
         ) {

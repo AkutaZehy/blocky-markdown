@@ -1,11 +1,7 @@
 // Tests for MarkdownUtils.parseImport block splitting
-'use strict';
-
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { loadClass } = require('./helpers/load.js');
-
-const MarkdownUtils = loadClass('js/utils/markdown.js', 'MarkdownUtils');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { MarkdownUtils } from '../js/utils/markdown.js';
 
 function parse (markdown) {
     return MarkdownUtils.parseImport(markdown).map((b) => [b.type, b.content]);

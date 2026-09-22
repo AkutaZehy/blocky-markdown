@@ -1,5 +1,5 @@
 // LocalStorage utility functions
-class Storage {
+export class Storage {
     static save (key, value) {
         try {
             localStorage.setItem(key, JSON.stringify(value));

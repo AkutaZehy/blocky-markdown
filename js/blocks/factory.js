@@ -1,5 +1,7 @@
 // Block factory for creating block elements with edit/preview modes
-class BlockFactory {
+import { BlockRenderer } from "../utils/renderer.js";
+
+export class BlockFactory {
     constructor(blockyMarkdown) {
         this.app = blockyMarkdown;
     }

@@ -1,5 +1,7 @@
 // Link editor with existing link detection and editing
-class LinkEditorManager {
+import { MarkdownUtils } from "../utils/markdown.js";
+
+export class LinkEditorManager {
     constructor(blockyMarkdown) {
         this.app = blockyMarkdown;
         this.currentEditingBlockId = null;

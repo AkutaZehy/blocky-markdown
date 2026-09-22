@@ -1,5 +1,5 @@
 // Outline management with hierarchy and collapse
-class OutlineManager {
+export class OutlineManager {
     constructor(blockyMarkdown) {
         this.app = blockyMarkdown;
     }

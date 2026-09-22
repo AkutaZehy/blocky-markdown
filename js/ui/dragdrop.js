@@ -1,5 +1,5 @@
 // Drag and drop management
-class DragDropManager {
+export class DragDropManager {
     constructor(blockyMarkdown) {
         this.app = blockyMarkdown;
         this.draggedBlock = null;

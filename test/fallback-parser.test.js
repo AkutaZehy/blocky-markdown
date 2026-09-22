@@ -1,16 +1,17 @@
 // Tests for the fallback markdown parser used when marked.js is unavailable
-'use strict';
-
-const test = require('node:test');
-const assert = require('node:assert/strict');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
 // The parser is an IIFE that writes to window.marked when no marked global
-// exists; emulate that environment.
+// exists; emulate that environment. markdown-parser.js stays a classic
+// script (it must run before the app module as a plain <script> tag), so
+// the test evaluates its source rather than importing it.
 globalThis.window = {};
-require('node:fs');
-const fs = require('node:fs');
-const path = require('node:path');
-const src = fs.readFileSync(path.join(__dirname, '..', 'markdown-parser.js'), 'utf8');
+const src = fs.readFileSync(
+    new URL('../markdown-parser.js', import.meta.url),
+    'utf8'
+);
 new Function('window', src)(globalThis.window);
 
 const parse = globalThis.window.marked.parse;

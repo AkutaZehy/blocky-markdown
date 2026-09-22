@@ -1,5 +1,5 @@
 // Table editor with split view
-class TableEditorManager {
+export class TableEditorManager {
     constructor(blockyMarkdown) {
         this.app = blockyMarkdown;
         this.currentEditingTableBlockId = null;

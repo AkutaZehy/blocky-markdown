@@ -1,11 +1,7 @@
 // Tests for the table editor's pure parsing/serialisation helpers
-'use strict';
-
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { loadClass } = require('./helpers/load.js');
-
-const TableEditorManager = loadClass('js/ui/tableeditor.js', 'TableEditorManager');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { TableEditorManager } from '../js/ui/tableeditor.js';
 
 test('splitTableRow keeps empty cells so columns stay aligned', () => {
     assert.deepEqual(
