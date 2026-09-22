@@ -499,19 +499,23 @@ export class BlockyMarkdown {
     }
 
     undo () {
-        if (this.history.length < 2) return;
-        this.history.pop();
-        // The live state being undone was never pushed to history (entries
-        // are pre-action states); snapshot it so redo can come back to it.
+        if (this.history.length === 0) return;
+        // History entries are pre-action states: the top entry is exactly
+        // where this undo lands, and popping it leaves the next entry as
+        // the target for the following undo. The live state (never in
+        // history) goes to the redo stack so redo can return to it.
         this.redoStack.push(this.snapshot());
-        const prev = this.history[this.history.length - 1];
+        const prev = this.history.pop();
         this.applyState(prev);
     }
 
     redo () {
         if (this.redoStack.length === 0) return;
+        // Mirror undo: park the current live state as a pre-action entry
+        // (before applyState replaces it), then replay the saved state.
+        this.history.push(this.snapshot());
+        this.trimHistory();
         const next = this.redoStack.pop();
-        this.history.push(next);
         this.applyState(next);
     }
 
