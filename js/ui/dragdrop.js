@@ -67,13 +67,11 @@ export class DragDropManager {
         blockElement.draggable = true;
 
         blockElement.addEventListener('dragstart', (e) => {
-            console.debug('dragstart', { draggedBlock: blockId });
             this.draggedBlock = blockId;
             blockElement.classList.add('dragging');
         });
 
         blockElement.addEventListener('dragend', () => {
-            console.debug('dragend', { draggedBlock: this.draggedBlock });
             this.draggedBlock = null;
             this.draggedOverBlock = null;
             this.draggedOverZone = null;
@@ -90,7 +88,6 @@ export class DragDropManager {
                 blockElement.classList.add('drag-over');
                 blockElement.classList.toggle('drag-over-after', this.draggedOverPosition === 'after');
                 blockElement.classList.toggle('drag-over-before', this.draggedOverPosition === 'before');
-                console.debug('dragover', { draggedBlock: this.draggedBlock, targetBlock: blockId, position: this.draggedOverPosition, zone: blockElement.closest('[data-drop-zone]')?.dataset.dropZone });
             }
         });
 
@@ -106,7 +103,6 @@ export class DragDropManager {
             if (this.draggedBlock && this.draggedBlock !== blockId) {
                 // Get the zone from the container
                 const zone = blockElement.closest('[data-drop-zone]').dataset.dropZone;
-                console.debug('drop on block', { draggedBlock: this.draggedBlock, targetBlock: blockId, zone, position: this.draggedOverPosition });
                 this.moveBlockToPosition(this.draggedBlock, blockId, zone, this.draggedOverPosition);
             }
         });
@@ -117,7 +113,6 @@ export class DragDropManager {
         const { block } = this.app.removeBlockById(blockId);
         if (!block) return;
         block.zone = targetZone;
-        console.debug('moveBlockToZone', { blockId, targetZone });
         this.app.insertBlockRelative(block, targetZone, null, 'after');
         this.app.renderBlocks();
         this.app.outlineManager.update();
@@ -132,7 +127,6 @@ export class DragDropManager {
             return;
         }
         block.zone = targetZone;
-        console.debug('moveBlockToPosition', { draggedBlockId, targetBlockId, targetZone, position });
         this.app.insertBlockRelative(block, targetZone, targetBlockId, position || 'before');
         this.app.renderBlocks();
         this.app.outlineManager.update();

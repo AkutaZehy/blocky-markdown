@@ -258,7 +258,6 @@ export class BlockFactory {
         switch (block.type) {
             case 'frontmatter':
                 const fmTextarea = this.createTextarea(block, '---\ntitle: My Post\ndate: 2024-01-01\n---');
-                fmTextarea.style.fontFamily = "'SF Mono', 'Monaco', 'Consolas', monospace";
                 container.appendChild(fmTextarea);
                 container.appendChild(this.createDoneButton(block.id));
                 return container;
@@ -280,7 +279,6 @@ export class BlockFactory {
 
             case 'heading':
                 const select = document.createElement('select');
-                select.style.marginBottom = '10px';
                 for (let i = 1; i <= 6; i++) {
                     const option = document.createElement('option');
                     option.value = i;
@@ -351,7 +349,6 @@ export class BlockFactory {
                 const langInput = document.createElement('input');
                 langInput.type = 'text';
                 langInput.placeholder = 'Language (e.g., javascript)';
-                langInput.style.marginBottom = '10px';
 
                 const codeMatch = block.content.match(/^```(\w+)?/);
                 if (codeMatch) {
@@ -367,7 +364,6 @@ export class BlockFactory {
                 };
 
                 const codeTextarea = this.createTextarea(block, 'Your code here...');
-                codeTextarea.style.fontFamily = "'SF Mono', 'Monaco', 'Consolas', monospace";
                 codeTextarea.oninput = (e) => {
                     this.app.updateBlockContent(block.id, e.target.value);
                 };
@@ -391,7 +387,6 @@ export class BlockFactory {
 
             case 'mermaid':
                 const mermaidTextarea = this.createTextarea(block, '```mermaid\ngraph TD;\n  A-->B;\n  A-->C;\n  B-->D;\n  C-->D;\n```');
-                mermaidTextarea.style.fontFamily = "'SF Mono', 'Monaco', 'Consolas', monospace";
                 container.appendChild(mermaidTextarea);
                 container.appendChild(this.createDoneButton(block.id));
                 return container;

@@ -67,9 +67,12 @@ body {
 
 .bottom-bar {
     border-top: 1px solid var(--border-color);
-    margin-top: auto;
+    border-bottom: none;
     position: sticky;
     bottom: 0;
+    margin-top: auto;
+    z-index: 100;
+    background: var(--surface-color);
 }
 
 .logo {
@@ -77,16 +80,6 @@ body {
     font-weight: 600;
     font-family: var(--font-family);
     color: var(--primary-color);
-}
-
-.bottom-bar {
-    border-top: 1px solid var(--border-color);
-    border-bottom: none;
-    position: sticky;
-    bottom: 0;
-    margin-top: auto;
-    z-index: 100;
-    background: var(--surface-color);
 }
 
 .toolbar {
@@ -242,12 +235,25 @@ body {
 
 /* Collapse/expand toggle */
 .outline-item-toggle {
+    display: inline-block;
     margin-right: 4px;
     cursor: pointer;
     user-select: none;
     flex-shrink: 0;
-    width: 16px;
+    width: 20px;
     text-align: center;
+    font-size: 0.8rem;
+}
+
+.outline-item-toggle:hover {
+    opacity: 0.7;
+}
+
+/* Keeps non-toggle rows aligned with toggle rows */
+.outline-item-spacer {
+    display: inline-block;
+    width: 20px;
+    flex-shrink: 0;
 }
 
 .toggle-level-1 {
@@ -319,18 +325,6 @@ body {
     color: var(--secondary-color);
     margin-bottom: 8px;
     font-family: var(--font-family);
-}
-
-/* Add Block Toolbar (Top) */
-.add-block-toolbar-top {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    padding: 12px;
-    background: var(--surface-color);
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    margin-bottom: 16px;
 }
 
 .btn-add {
@@ -467,15 +461,6 @@ body {
     border-color: var(--primary-color);
 }
 
-.block-index-input {
-    width: 70px;
-    padding: 4px 6px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background: var(--bg-color);
-    color: var(--text-color);
-}
-
 .block-content {
     margin-top: 12px;
 }
@@ -526,22 +511,6 @@ body {
     justify-content: space-between;
 }
 
-.add-pos-toggles {
-    display: inline-flex;
-    gap: 8px;
-    margin-right: 12px;
-}
-
-.add-pos-toggles .btn-small {
-    padding: 6px 10px;
-}
-
-.add-pos-toggles .active {
-    background: var(--primary-color);
-    color: #fff;
-    border-color: var(--primary-color);
-}
-
 .cache-container {
     min-height: 100px;
 }
@@ -589,10 +558,6 @@ body {
     max-height: 80vh;
     overflow-y: auto;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.modal-large {
-    max-width: 800px;
 }
 
 .modal-xlarge {
@@ -728,6 +693,10 @@ body {
     resize: vertical;
 }
 
+#insertLinkInCell {
+    margin-top: 10px;
+}
+
 .table-controls {
     display: flex;
     gap: 8px;
@@ -837,23 +806,6 @@ body {
 
 .block {
     animation: slideIn 0.2s ease-out;
-}
-
-/* Link button in blocks */
-.block-link-btn {
-    margin-top: 8px;
-    padding: 4px 10px;
-    font-size: 0.85rem;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.block-link-btn:hover {
-    background: var(--hover-color);
-    border-color: var(--primary-color);
 }
 
 /* Sticky toolbar for adding blocks */
@@ -980,6 +932,7 @@ body {
     background: var(--bg-color);
     color: var(--text-color);
     font-family: var(--font-family-body);
+    margin-bottom: 10px;
 }
 
 .block-done-btn {
@@ -1013,20 +966,7 @@ body {
     background: var(--hover-color);
 }
 
-/* Outline collapse toggle */
-.outline-item-toggle {
-    display: inline-block;
-    width: 20px;
-    cursor: pointer;
-    user-select: none;
-    font-size: 0.8rem;
-}
-
-.outline-item-toggle:hover {
-    opacity: 0.7;
-}
-
-/* Secondary background color */
-.bg-secondary {
-    background: var(--surface-color);
+/* Outline jump target: brief highlight after clicking an outline item */
+.block-flash {
+    box-shadow: 0 0 0 3px var(--primary-color);
 }

@@ -83,8 +83,7 @@ export class OutlineManager {
             item.appendChild(toggle);
         } else {
             const spacer = document.createElement('span');
-            spacer.style.display = 'inline-block';
-            spacer.style.width = '16px';
+            spacer.className = 'outline-item-spacer';
             item.appendChild(spacer);
         }
 
@@ -129,9 +128,9 @@ export class OutlineManager {
             const blockElement = document.querySelector(`.blocks-container [data-block-id="${block.id}"], .cache-container [data-block-id="${block.id}"]`);
             if (blockElement) {
                 blockElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                blockElement.style.boxShadow = '0 0 0 3px var(--primary-color)';
+                blockElement.classList.add('block-flash');
                 setTimeout(() => {
-                    blockElement.style.boxShadow = '';
+                    blockElement.classList.remove('block-flash');
                 }, 1000);
             }
             if (this.app.setTip) {

@@ -17,65 +17,6 @@ export class BlockRenderer {
         return labels[type] || `[${type}]`;
     }
 
-    static getBlockOutlineText (block) {
-        if (!block.content) {
-            return `[Empty ${block.type}]`;
-        }
-
-        switch (block.type) {
-            case 'heading':
-                const headingText = block.content.replace(/^#{1,6}\s/, '');
-                return headingText.substring(0, 40) || '[Empty heading]';
-
-            case 'paragraph':
-                return block.content.substring(0, 40) + (block.content.length > 40 ? '...' : '');
-
-            case 'code':
-                const match = block.content.match(/^```(\w+)?/);
-                return match && match[1] ? `Code (${match[1]})` : 'Code block';
-
-            case 'table':
-                const lines = block.content.split('\n').filter(l => l.trim().startsWith('|'));
-                return `Table (${lines.length > 2 ? lines.length - 2 : 0} rows)`;
-
-            case 'list':
-                const items = block.content.split('\n').filter(l => l.trim());
-                return `List (${items.length} items)`;
-
-            case 'frontmatter':
-                return 'Frontmatter';
-
-            case 'hr':
-                return 'Horizontal rule';
-
-            case 'br':
-                return 'Line break';
-
-            case 'html':
-                return 'HTML block';
-
-            case 'mermaid':
-                return 'Mermaid diagram';
-
-            default:
-                return block.type;
-        }
-    }
-
-    // Renders markdown through marked + DOMPurify, the same pipeline as the
-    // global preview. Returns null when either library is missing so callers
-    // can fall back to plain text instead of injecting unsanitized HTML.
-    static renderSanitized (markdown) {
-        if (
-            typeof window === 'undefined' ||
-            typeof window.marked === 'undefined' ||
-            typeof window.DOMPurify === 'undefined'
-        ) {
-            return null;
-        }
-        return window.DOMPurify.sanitize(window.marked.parse(markdown));
-    }
-
     static createPreviewElement (block) {
         const div = document.createElement('div');
         div.className = 'block-preview';

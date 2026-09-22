@@ -54,7 +54,6 @@ export class BlockyMarkdown {
         this.updateAddPositionUI();
         this.updatePreviewUI();
         this.setTip(this.defaultTip);
-        this.updatePreviewUI();
 
         // If no blocks exist, add a welcome block
         if (this.workspaceBlocks.length === 0) {
@@ -108,11 +107,6 @@ export class BlockyMarkdown {
                 e.preventDefault();
                 const type = e.target.closest("button").dataset.type;
                 const position = this.addPosition === "start" ? 0 : -1;
-                console.debug("addBlock click", {
-                    type,
-                    addPosition: this.addPosition,
-                    insertPosition: position,
-                });
                 this.addBlock(type, "", "workspace", position);
             });
         });
@@ -656,12 +650,6 @@ export class BlockyMarkdown {
         if (index === -1) return;
 
         const targetPos = direction === "up" ? index : index + 2;
-        console.debug("moveBlock click", {
-            blockId,
-            direction,
-            fromIndex: index + 1,
-            targetPos,
-        });
         this.moveBlockToIndex(blockId, "workspace", targetPos);
         this.renderBlocks();
         this.outlineManager.update();
