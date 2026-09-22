@@ -14,6 +14,7 @@ class BlockyMarkdown {
         this.isRestoringHistory = false;
         this.contentEditOpen = false;
         this.contentEditTimer = null;
+        this.persistTimer = null;
         this.mermaidLoading = null;
         this.previewMode = false;
         this.defaultTip = "Blocky Markdown";
@@ -52,6 +53,12 @@ class BlockyMarkdown {
         }
 
         this.outlineManager.update();
+
+        // A pending debounced save must land before the page goes away
+        window.addEventListener("beforeunload", () => this.flushPersist());
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "hidden") this.flushPersist();
+        });
     }
 
     setupEventListeners () {
@@ -419,6 +426,27 @@ class BlockyMarkdown {
         }
     }
 
+    // Rebuilding the outline and serializing the whole document on every
+    // keystroke makes large documents lag; batch both behind a short
+    // trailing debounce instead. Structural actions still save
+    // synchronously, and unload flushes so the last burst is never lost.
+    schedulePersist () {
+        clearTimeout(this.persistTimer);
+        this.persistTimer = setTimeout(() => {
+            this.persistTimer = null;
+            this.outlineManager.update();
+            this.saveToLocalStorage();
+        }, 300);
+    }
+
+    flushPersist () {
+        if (this.persistTimer === null) return;
+        clearTimeout(this.persistTimer);
+        this.persistTimer = null;
+        this.outlineManager.update();
+        this.saveToLocalStorage();
+    }
+
     snapshot () {
         return {
             workspaceBlocks: JSON.parse(JSON.stringify(this.workspaceBlocks)),
@@ -698,8 +726,7 @@ class BlockyMarkdown {
 
         if (block) {
             block.content = content;
-            this.outlineManager.update();
-            this.saveToLocalStorage();
+            this.schedulePersist();
         }
     }
 
