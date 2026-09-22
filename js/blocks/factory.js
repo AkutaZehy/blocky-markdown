@@ -189,7 +189,11 @@ class BlockFactory {
     }
 
     createPreviewContent (block) {
-        return BlockRenderer.createPreviewElement(block);
+        const el = BlockRenderer.createPreviewElement(block);
+        if (block.type === 'mermaid') {
+            this.app.renderMermaidPreview(el);
+        }
+        return el;
     }
 
     createEditContent (block) {

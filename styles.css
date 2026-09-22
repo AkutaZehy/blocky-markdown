@@ -881,10 +881,45 @@ body {
 
 .block-preview {
     cursor: pointer;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    min-height: 40px;
+    overflow-wrap: anywhere;
 }
 
 .block-preview:hover {
     background: var(--hover-color);
+}
+
+.block-preview-hint {
+    color: var(--secondary-color);
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+.block-preview hr {
+    border: 1px solid var(--border-color);
+}
+
+.block-preview pre {
+    overflow-x: auto;
+    white-space: pre-wrap;
+}
+
+.block-preview table,
+.block-preview th,
+.block-preview td {
+    border: 1px solid var(--border-color);
+    padding: 4px 8px;
+}
+
+.workspace-preview table,
+.workspace-preview th,
+.workspace-preview td {
+    border: 1px solid var(--border-color);
+    padding: 4px 8px;
 }
 
 .block-edit textarea {

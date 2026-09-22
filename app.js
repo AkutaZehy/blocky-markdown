@@ -294,15 +294,11 @@ class BlockyMarkdown {
 
         if (this.previewMode) {
             const markdown = MarkdownUtils.exportBlocks(this.workspaceBlocks);
-            if (typeof marked !== "undefined") {
-                const rawHtml = marked.parse(markdown);
-                if (typeof DOMPurify !== "undefined") {
-                    previewContainer.innerHTML = DOMPurify.sanitize(rawHtml);
-                } else {
-                    // Never inject untrusted HTML without a sanitizer
-                    previewContainer.textContent = markdown;
-                }
+            const html = BlockRenderer.renderSanitized(markdown);
+            if (html !== null) {
+                previewContainer.innerHTML = html;
             } else {
+                // Never inject untrusted HTML without a sanitizer
                 previewContainer.textContent = markdown;
             }
             this.renderMermaidPreview(previewContainer);

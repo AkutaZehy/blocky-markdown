@@ -62,30 +62,54 @@ class BlockRenderer {
         }
     }
 
+    // Renders markdown through marked + DOMPurify, the same pipeline as the
+    // global preview. Returns null when either library is missing so callers
+    // can fall back to plain text instead of injecting unsanitized HTML.
+    static renderSanitized (markdown) {
+        if (
+            typeof window.marked === 'undefined' ||
+            typeof window.DOMPurify === 'undefined'
+        ) {
+            return null;
+        }
+        return window.DOMPurify.sanitize(window.marked.parse(markdown));
+    }
+
     static createPreviewElement (block) {
         const div = document.createElement('div');
         div.className = 'block-preview';
-        div.style.padding = '10px';
-        div.style.background = 'var(--bg-secondary)';
-        div.style.borderRadius = '4px';
-        div.style.border = '1px solid var(--border-color)';
-        div.style.cursor = 'pointer';
-        div.style.minHeight = '40px';
 
-        if (block.content) {
-            // Show preview based on type
-            if (block.type === 'hr') {
-                div.innerHTML = '<hr style="border: 1px solid var(--border-color);">';
-            } else if (block.type === 'br') {
-                div.innerHTML = '<p style="color: var(--secondary-color); font-size: 0.85rem;">Line break</p>';
-            } else if (block.type === 'table') {
-                div.innerHTML = '<p style="color: var(--secondary-color);">Table (click Edit to modify)</p>';
-            } else {
-                const preview = block.content.substring(0, 100);
-                div.textContent = preview + (block.content.length > 100 ? '...' : '');
-            }
+        const hint = (text) => {
+            const p = document.createElement('p');
+            p.className = 'block-preview-hint';
+            p.textContent = text;
+            div.appendChild(p);
+            return div;
+        };
+
+        if (block.type === 'br') {
+            return hint('Line break');
+        }
+
+        if (!block.content) {
+            return hint('Click Edit to add content');
+        }
+
+        if (block.type === 'frontmatter') {
+            // YAML frontmatter reads best as source, not rendered markdown
+            const pre = document.createElement('pre');
+            pre.textContent = block.content;
+            div.appendChild(pre);
+            return div;
+        }
+
+        const html = BlockRenderer.renderSanitized(block.content);
+        if (html !== null) {
+            div.innerHTML = html;
         } else {
-            div.innerHTML = '<p style="color: var(--secondary-color); font-style: italic;">Click Edit to add content</p>';
+            // No marked/DOMPurify: show truncated text, never raw HTML
+            const preview = block.content.substring(0, 100);
+            div.textContent = preview + (block.content.length > 100 ? '...' : '');
         }
 
         return div;
