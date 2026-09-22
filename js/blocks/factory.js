@@ -63,6 +63,20 @@ class BlockFactory {
         const indexLabel = document.createElement('span');
         indexLabel.className = 'block-index';
         indexLabel.textContent = `#${block.index || index + 1}`;
+        indexLabel.title = 'Set index (integer)';
+        indexLabel.onclick = (e) => {
+            e.stopPropagation();
+            const current = block.index || index + 1;
+            const value = prompt('Set index (integer)', current.toString());
+            if (value === null) return;
+            const num = parseInt(value, 10);
+            if (!isNaN(num)) {
+                this.app.moveBlockToIndex(block.id, 'workspace', num);
+                this.app.renderBlocks();
+                this.app.outlineManager.update();
+                this.app.saveToLocalStorage();
+            }
+        };
         meta.appendChild(indexLabel);
 
         const typeLabel = document.createElement('span');
@@ -139,25 +153,6 @@ class BlockFactory {
             cacheBtn.textContent = 'Cache';
             cacheBtn.onclick = () => this.app.moveBlockToCache(block.id);
             controls.appendChild(cacheBtn);
-
-            const indexBtn = document.createElement('button');
-            indexBtn.className = 'block-btn';
-            indexBtn.textContent = `Index #${block.index || index + 1}`;
-            indexBtn.title = 'Set index (integer)';
-            indexBtn.onclick = (e) => {
-                e.stopPropagation();
-                const value = prompt('Set index (integer)', (block.index || index + 1).toString());
-                if (value === null) return;
-                const num = parseInt(value, 10);
-                if (!isNaN(num)) {
-                    console.debug('index prompt confirm', { blockId: block.id, fromIndex: block.index || index + 1, toIndex: num });
-                    this.app.moveBlockToIndex(block.id, 'workspace', num);
-                    this.app.renderBlocks();
-                    this.app.outlineManager.update();
-                    this.app.saveToLocalStorage();
-                }
-            };
-            controls.appendChild(indexBtn);
         } else {
             // Cache zone
             const restoreEndBtn = document.createElement('button');

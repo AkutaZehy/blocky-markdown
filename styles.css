@@ -408,6 +408,11 @@ body {
     font-weight: 700;
     color: var(--primary-color);
     margin-right: 8px;
+    cursor: pointer;
+}
+
+.block-index:hover {
+    text-decoration: underline;
 }
 
 .block-type {
@@ -422,6 +427,24 @@ body {
     gap: 6px;
     flex-wrap: wrap;
     justify-content: flex-end;
+    /* Controls are chrome, not content: hidden until the block is
+       hovered or focus lands inside it (keyboard users keep access). */
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+}
+
+.block:hover .block-controls,
+.block:focus-within .block-controls {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+@media (hover: none) {
+    .block-controls {
+        opacity: 1;
+        pointer-events: auto;
+    }
 }
 
 .block-btn {
