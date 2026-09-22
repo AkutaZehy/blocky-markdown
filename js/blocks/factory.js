@@ -233,19 +233,39 @@ class BlockFactory {
                     select.value = match[1].length;
                 }
 
-                select.onchange = () => {
-                    const textarea = container.querySelector('textarea');
-                    const text = textarea.value.replace(/^#{1,6}\s/, '');
-                    textarea.value = '#'.repeat(select.value) + ' ' + text;
-                    this.app.updateBlockContent(block.id, textarea.value);
+                const hTextarea = this.createTextarea(block, 'Heading text...');
+
+                // Rewrite the "## " prefix only when it has drifted (level
+                // changed, hashes deleted). Assigning .value on every input
+                // would fling the caret to the end of the textarea, so when a
+                // rewrite is needed the caret is restored at the same offset
+                // within the heading body.
+                const syncHeadingPrefix = () => {
+                    if (hTextarea.value === '') return '';
+                    const prefix = '#'.repeat(Number(select.value)) + ' ';
+                    const body = hTextarea.value.replace(/^#{1,6}\s?/, '');
+                    const next = prefix + body;
+                    if (next !== hTextarea.value) {
+                        const pos = hTextarea.selectionStart;
+                        const bodyOffset = Math.max(
+                            0,
+                            pos - (hTextarea.value.length - body.length)
+                        );
+                        hTextarea.value = next;
+                        const newPos = Math.min(next.length, prefix.length + bodyOffset);
+                        hTextarea.setSelectionRange(newPos, newPos);
+                    }
+                    return next;
                 };
 
-                const hTextarea = this.createTextarea(block, 'Heading text...');
-                hTextarea.oninput = (e) => {
-                    const level = select.value;
-                    const text = e.target.value.replace(/^#{1,6}\s/, '');
-                    e.target.value = '#'.repeat(level) + ' ' + text;
-                    this.app.updateBlockContent(block.id, e.target.value);
+                select.onchange = () => {
+                    const value = syncHeadingPrefix();
+                    this.app.updateBlockContent(block.id, value);
+                };
+
+                hTextarea.oninput = () => {
+                    const value = syncHeadingPrefix();
+                    this.app.updateBlockContent(block.id, value);
                 };
 
                 container.appendChild(select);
