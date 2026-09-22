@@ -16,7 +16,8 @@ A minimalist, framework-free markdown editor with a block-based interface and hi
 - 🔗 **Link Editor Tool** - Insert links in paragraphs, lists, and tables
 - 💾 **Import/Export** - Full markdown support with frontmatter
 - 🔄 **Auto-Save** - Automatic localStorage persistence
-- 🚀 **No Build Required** - Pure HTML, CSS, and JavaScript
+- 🖱 **Hover Controls** - Per-block buttons fade in on hover (always visible on touch)
+- 🚀 **No Build Required** - Pure HTML, CSS, and JavaScript as native ES modules
 
 ## Theme System
 
@@ -81,7 +82,7 @@ All blocks use clean HTML-style tags (no emojis):
 
 ### Block Management
 - **Drag and drop** - Move blocks between workspace and cache
-- **Arrow buttons** - ↑↓ for adjacent swapping
+- **Arrow buttons** - ↑↓ for adjacent swapping; the button row appears on hover
 - **Cache system** - Move blocks to cache instead of deleting
 - **Permanent delete** - Only available in cache (with confirmation)
 - **Visual feedback** - Border highlights show drop targets
@@ -89,15 +90,15 @@ All blocks use clean HTML-style tags (no emojis):
 ## Usage
 
 ### 1) Import
-- Open `index.html` in your browser (no build needed).
+- Serve the folder with any static file server and open it there — native ES modules do not load over `file://` (e.g. `python -m http.server` or `npx serve`). No build step.
 - Click **↓ Import**, paste Markdown (frontmatter supported), confirm. Consecutive paragraphs auto-merge; history snapshot is taken.
 
 ### 2) Edit
 - **Add blocks**: Toolbar tags ([p], [h], [list], etc.). Toggle **Add → Start/End** to choose insertion point.
 - **Outline**: Heading-only list with level-colored toggles (shown only when children exist). Click once to toggle + jump.
-- **Reorder**: Drag blocks (before/after targets); move buttons (top/up/down/bottom) and **Index #** prompt reinsert via linked-list model. Move to **Cache** or restore to workspace end.
+- **Reorder**: Drag blocks (before/after targets); move buttons (top/up/down/bottom) or clicking the **#N** label reinsert by array order. Move to **Cache** or restore to workspace end.
 - **Inline vs. focus edit**: Click block to edit inline; use **Edit/Done** for focus mode. Tip bar (bottom) shows contextual hints.
-- **Preview**: Use **Preview/Edit** toggle to render current workspace (Marked fallback).
+- **Preview**: Use **Preview/Edit** toggle to render the whole workspace; each block also renders its own markdown in place (Marked, with a plain-text fallback).
 - **Undo/Redo**: Buttons or **Ctrl+Z / Ctrl+Y**. History limit configurable via **History** (default 100). **Clear Workspace/Cache** available. Resizers adjust outline/workspace/cache widths. Tooltips on buttons/outline/toggles/block controls.
 
 ### 3) Export
@@ -112,7 +113,7 @@ All blocks use clean HTML-style tags (no emojis):
 
 - **HTML5** - Structure
 - **CSS3** - Dual theme with CSS variables
-- **JavaScript (ES6+)** - Application logic (1333 lines)
+- **JavaScript (ES Modules)** - Application logic, loaded natively with no build step
 - **Marked.js** - Markdown parsing (with fallback)
 - **DOMPurify** - Sanitizes HTML before it enters the preview pane
 - **Mermaid.js** - Renders mermaid diagrams in the preview (lazy-loaded when needed)
@@ -120,7 +121,7 @@ All blocks use clean HTML-style tags (no emojis):
 ## Browser Compatibility
 
 Works in all modern browsers supporting:
-- ES6 JavaScript
+- Native ES modules
 - CSS Grid and Flexbox
 - CSS Custom Properties
 - LocalStorage API
