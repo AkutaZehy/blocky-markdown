@@ -532,14 +532,11 @@ export class BlockyMarkdown {
     }
 
     // Array order is the model; index is a derived 1-based display number.
-    // The sort only matters for documents saved by old versions whose
-    // persisted order could disagree with their stored index values.
+    // Sorting by index here would re-sort by the *stale* values still on
+    // the blocks and undo the splice that just repositioned them (every
+    // move-up/top/drag-before went back to its old slot because of it).
     renumberBlocks (zone) {
         const list = this.getList(zone);
-        list.sort(
-            (a, b) =>
-                (a.index || list.indexOf(a) + 1) - (b.index || list.indexOf(b) + 1)
-        );
         list.forEach((block, idx) => {
             block.index = idx + 1;
         });
