@@ -13,7 +13,10 @@ export class TableEditorManager {
         let s = line.trim();
         if (s.startsWith('|')) s = s.slice(1);
         if (s.endsWith('|')) s = s.slice(0, -1);
-        return s.split(/(?<!\\)\|/).map((cell) => cell.trim().replace(/\\\|/g, '|'));
+        return s
+            .replace(/\\\|/g, '\u0000')
+            .split('|')
+            .map((cell) => cell.trim().replace(/\u0000/g, '|'));
     }
 
     static isSeparatorRow (line) {

@@ -69,6 +69,8 @@ export class DragDropManager {
         blockElement.addEventListener('dragstart', (e) => {
             this.draggedBlock = blockId;
             blockElement.classList.add('dragging');
+            // Firefox refuses to start a drag without payload data
+            if (e.dataTransfer) e.dataTransfer.setData('text/plain', blockId);
         });
 
         blockElement.addEventListener('dragend', () => {
