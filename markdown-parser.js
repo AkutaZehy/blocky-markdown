@@ -5,18 +5,43 @@
         return;
     }
 
+    const PLACEHOLDER = '\u0000';
+
     // Create a simple markdown parser
     window.marked = {
         parse: function (markdown) {
             let html = markdown;
 
-            // Code blocks (before other processing)
+            // Hide code blocks/spans behind placeholders before the global
+            // escape pass: their content is escaped exactly once here, and
+            // the inline passes never treat generated HTML as input.
+            const codeBlocks = [];
             html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function (match, lang, code) {
-                return '<pre><code class="language-' + lang + '">' + escapeHtml(code.trim()) + '</code></pre>';
+                codeBlocks.push('<pre><code class="language-' + escapeHtml(lang) + '">' + escapeHtml(code.trim()) + '</code></pre>');
+                return PLACEHOLDER + 'CB' + (codeBlocks.length - 1) + PLACEHOLDER;
             });
 
-            // Inline code
-            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            const codeSpans = [];
+            html = html.replace(/`([^`]+)`/g, function (match, code) {
+                codeSpans.push('<code>' + escapeHtml(code) + '</code>');
+                return PLACEHOLDER + 'CS' + (codeSpans.length - 1) + PLACEHOLDER;
+            });
+
+            // Ordered lists: wrapped in <ol> and hidden before the generic
+            // <li> sweep would fold them into a <ul>.
+            const olBlocks = [];
+            html = html.replace(/(?:^\d+\. .*(?:\n|$))+/gim, function (block) {
+                const items = block.trim().split('\n')
+                    .map((line) => '<li>' + line.replace(/^\s*\d+\.\s*/, '') + '</li>')
+                    .join('\n');
+                olBlocks.push('<ol>\n' + items + '\n</ol>');
+                return PLACEHOLDER + 'OL' + (olBlocks.length - 1) + PLACEHOLDER;
+            });
+
+            // Escape all remaining text once, up front: every replacement
+            // below only inserts tags from fixed templates, so every captured
+            // group is already escaped and cannot break out into markup.
+            html = escapeHtml(html);
 
             // Headers
             html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
@@ -35,20 +60,23 @@
             html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
 
             // Images (must run before links, or the inner [alt](url) of
-            // ![alt](url) would be converted to an anchor first)
-            html = html.replace(/!\[([^\]]*)\]\(([^)"]+)(?:\s+"([^"]+)")?\)/g, function (match, alt, url, title) {
+            // ![alt](url) would be converted to an anchor first). Text is
+            // already escaped here, so titles use &quot; for quotes.
+            html = html.replace(/!\[([^\]]*)\]\(([^)]+?)(?:\s+&quot;([^&]*)&quot;)?\)/g, function (match, alt, url, title) {
+                const src = safeUrl(url);
                 if (title) {
-                    return '<img src="' + url + '" alt="' + alt + '" title="' + title + '">';
+                    return '<img src="' + src + '" alt="' + alt + '" title="' + title + '">';
                 }
-                return '<img src="' + url + '" alt="' + alt + '">';
+                return '<img src="' + src + '" alt="' + alt + '">';
             });
 
             // Links
-            html = html.replace(/\[([^\]]+)\]\(([^)"]+)(?:\s+"([^"]+)")?\)/g, function (match, text, url, title) {
+            html = html.replace(/\[([^\]]+)\]\(([^)]+?)(?:\s+&quot;([^&]*)&quot;)?\)/g, function (match, text, url, title) {
+                const href = safeUrl(url);
                 if (title) {
-                    return '<a href="' + url + '" title="' + title + '">' + text + '</a>';
+                    return '<a href="' + href + '" title="' + title + '">' + text + '</a>';
                 }
-                return '<a href="' + url + '">' + text + '</a>';
+                return '<a href="' + href + '">' + text + '</a>';
             });
 
             // Tables
@@ -109,9 +137,6 @@
             // Wrap consecutive list items in ul
             html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
 
-            // Ordered lists
-            html = html.replace(/^\d+\. (.+)$/gim, '<li>$1</li>');
-
             // Line breaks
             html = html.replace(/\n\n/g, '</p><p>');
             html = html.replace(/\n/g, '<br>');
@@ -121,9 +146,21 @@
                 html = '<p>' + html + '</p>';
             }
 
+            // Restore protected blocks
+            html = html.replace(new RegExp(PLACEHOLDER + 'OL(\\d+)' + PLACEHOLDER, 'g'), (m, i) => olBlocks[+i]);
+            html = html.replace(new RegExp(PLACEHOLDER + 'CB(\\d+)' + PLACEHOLDER, 'g'), (m, i) => codeBlocks[+i]);
+            html = html.replace(new RegExp(PLACEHOLDER + 'CS(\\d+)' + PLACEHOLDER, 'g'), (m, i) => codeSpans[+i]);
+
             return html;
         }
     };
+
+    // URLs are attribute-escaped by the global pass already; this only keeps
+    // schemes that cannot execute script out of href/src.
+    function safeUrl (url) {
+        if (/^\s*(javascript|data|vbscript)\s*:/i.test(url)) return '#';
+        return url;
+    }
 
     function escapeHtml (text) {
         const map = {

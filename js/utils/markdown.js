@@ -3,8 +3,9 @@ export class MarkdownUtils {
     static parseImport (markdown) {
         const blocks = [];
 
-        // Parse frontmatter first
-        const frontmatterMatch = markdown.match(/^---\n([\s\S]*?)\n---\n/);
+        // Parse frontmatter first (tolerates CRLF and a missing trailing
+        // newline after the closing ---)
+        const frontmatterMatch = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
         if (frontmatterMatch) {
             blocks.push({ type: 'frontmatter', content: frontmatterMatch[0].trim() });
             markdown = markdown.substring(frontmatterMatch[0].length);
