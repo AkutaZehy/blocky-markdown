@@ -92,6 +92,7 @@ All blocks use clean HTML-style tags (no emojis):
 ### 1) Import
 - Serve the folder with any static file server and open it there — native ES modules do not load over `file://` (e.g. `python -m http.server` or `npx serve`). No build step.
 - Click **↓ Import**, paste Markdown (frontmatter supported), confirm. Consecutive paragraphs auto-merge; history snapshot is taken.
+- Or paste the bundled [`example.md`](./example.md) — a one-page tour of every block type, from tables to Mermaid diagrams.
 
 ### 2) Edit
 - **Add blocks**: Toolbar tags ([p], [h], [list], etc.). Toggle **Add → Start/End** to choose insertion point.

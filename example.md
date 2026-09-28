@@ -1,51 +1,60 @@
-# Welcome to Blocky Markdown! ✨
+---
+title: Blocky Markdown Demo
+author: blocky-markdown
+---
 
-This is a demonstration document to showcase the block-based markdown editor.
+# Blocky Markdown Demo
 
-## Features
+Every block type on one page. Import this file (↓ Import), edit it block by block, then export it back out — what you see is round-trippable Markdown.
 
-- Block-based editing like WordPress
-- Y2K retro design aesthetic
-- Interactive table editor
-- Smart link editor
-- Import/Export markdown files
-- Auto-save to browser localStorage
+## Blocks you can compose
 
-## Example Table
+Paragraphs are ordinary text. Inline markup like **bold**, *italic*, `inline code`, and a [link](https://github.com "blocky-markdown repo") works inside them.
 
-| Feature          | Status | Description         |
-| ---------------- | ------ | ------------------- |
-| Paragraph Blocks | ✅      | Simple text editing |
-| Headings         | ✅      | H1 through H6       |
-| Tables           | ✅      | Interactive editor  |
-| Links            | ✅      | With title support  |
-| Code Blocks      | ✅      | Syntax highlighting |
+### Lists
 
-## Code Example
+- Drag a block onto another to reorder
+- Use the arrow buttons to nudge it up or down
+- Click the #N badge to set its position directly
+
+1. Import some Markdown
+2. Edit block by block
+3. Export when done
+
+### Quote
+
+> Blocks move to the Cache instead of being deleted — nothing is lost by accident.
+
+---
+
+### Tables
+
+| Block type | Editable | Round-trip |
+| ---------- | -------- | ---------- |
+| Paragraph  | Yes      | Yes        |
+| Table      | Yes      | Yes        |
+| Mermaid    | Yes      | Yes        |
+
+### Code
 
 ```javascript
-function greet(name) {
-  console.log(`Hello, ${name}!`);
-  console.log("Welcome to the Y2K era! 🌟");
-}
-
-greet("Developer");
+// Blocks are plain objects in an array — no framework, no build step
+const block = { id: 'b1', type: 'code', content: '...' };
+console.log(`Hello from the ${block.type} block!`);
 ```
 
-## More Features
+### Diagrams
 
-- Lists (ordered and unordered)
-- Blockquotes for citations
-- Block reordering (move up/down)
-- Individual block deletion
+```mermaid
+graph LR
+  A[Markdown in] --> B{Parse}
+  B --> C[Blocks]
+  C --> D[Edit]
+  D --> E[Markdown out]
+```
 
-> "The best way to predict the future is to create it."
+That's the whole tour — press ↑ Export (Ctrl+S) any time.
 
-## Get Started
+### Raw HTML
 
-1. Click the Import MD button
-2. Paste this content
-3. Start editing!
-4. Export when done
-
-Enjoy your retro markdown editing experience! 🎨✨
+<p>Raw HTML blocks are sanitized by <b>DOMPurify</b> before rendering.</p>

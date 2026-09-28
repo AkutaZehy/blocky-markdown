@@ -92,6 +92,7 @@
 ### 1）导入
 - 用任意静态服务器托管本目录后在浏览器打开——原生 ES modules 不支持 `file://` 直开（例如 `python -m http.server` 或 `npx serve`）。无需安装依赖或构建。
 - 点击 **↓ Import**，粘贴 Markdown（支持 frontmatter），确认导入。连续段落会自动合并，导入前会记录历史快照。
+- 也可以直接粘贴仓库自带的 [`example.md`](./example.md)——一页覆盖从表格到 Mermaid 图表的全部块类型。
 
 ### 2）编辑
 - **添加块**：使用工具栏标签（[p]、[h]、[list] 等），用 **Add → Start/End** 切换插入位置。
@@ -148,6 +149,7 @@
    - 预览经 `marked` 渲染并由 DOMPurify 消毒，页面内脚本/样式不执行；Mermaid 图表为懒加载渲染。
 3. **导入/导出保真度有限**
    - `js/utils/markdown.js` 中的 `MarkdownUtils.parseImport` 依赖行级规则，不支持 setext 标题、`~~~` 代码围栏、对齐表格/嵌套列表等复杂结构。
+   - HTML 块按行累积，直到出现含闭合标签的行；独占一行的自闭合 HTML（如 `<p>...</p>`）会把后续行并入同一块。把 HTML 块放在文档末尾可规避（自带 `example.md` 即如此组织）。
    - 同文件的 `MarkdownUtils.exportBlocks` 仅拼接 `content` 字段，复杂 Markdown 往返易变形，frontmatter 也仅识别文件开头。
 4. **触控/键盘可用性不足**
    - 面板分隔与拖拽仅监听鼠标/HTML5 drag 事件（`setupResizer`、`DragDropManager`），触屏设备无法调整或重排，也未提供键盘操作替代。
